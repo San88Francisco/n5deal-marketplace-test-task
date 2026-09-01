@@ -45,6 +45,33 @@ Other useful scripts:
 | `npm run db:reset` | Drop, re-migrate and re-seed |
 | `npm run db:down` | Stop the MySQL container |
 
+## Deployment
+
+Vercel for the app, TiDB Cloud Starter for the database — a MySQL-compatible
+serverless tier, so the deployed environment runs the same engine as local
+development rather than swapping to Postgres for hosting reasons.
+
+Environment variables on the host:
+
+| Variable | Notes |
+| --- | --- |
+| `DATABASE_URL` | Append `?sslaccept=strict&connection_limit=1` — TiDB requires TLS, and each serverless instance must hold a single connection or the pool is exhausted under load |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `GEMINI_API_KEY` | Optional; without it the AI features degrade to keyword search |
+
+Migrations and seed data are applied against the remote database once, from a
+machine that has the repository:
+
+```bash
+DATABASE_URL="<remote url>" npx prisma migrate deploy
+DATABASE_URL="<remote url>" npx tsx prisma/seed.ts
+```
+
+One constraint worth knowing: the Vercel Hobby plan caps a function at 10
+seconds. A Gemini call takes most of that, so the AI endpoints sit close to the
+ceiling — they fall back to the deterministic path on timeout rather than
+failing the request.
+
 ### Demo accounts
 
 Password for all three: `n5deal-demo-2026` (they are also listed on the sign-in
