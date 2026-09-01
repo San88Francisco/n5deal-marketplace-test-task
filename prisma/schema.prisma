@@ -1,0 +1,456 @@
+// N5Deal marketplace — data model
+//
+// Design notes (full reasoning in docs/ARCHITECTURE.md):
+// - MySQL has no scalar arrays, so every many-valued attribute is a real join
+//   table. That is not a workaround: jurisdictions and licence categories are
+//   the primary filter axes of this marketplace, so they must be indexable.
+// - Jurisdiction / LicenceCategory are reference tables rather than enums,
+//   because the platform operates in 30+ jurisdictions and that list must
+//   change without a schema migration.
+// - Money is DECIMAL(18,2), never Float.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & access
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  BUYER
+  SELLER
+  PLATFORM_MANAGER
+}
+
+/// ACTIVE    — normal access.
+/// SUSPENDED — kept in the database, blocked from signing in, hidden from the
+///             marketplace. Reversible by a platform manager.
+/// REMOVED   — soft delete. The row survives so conversations and the audit
+///             trail stay referentially intact; nothing is exposed publicly.
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  statusReason String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  sessions            Session[]
+  buyerProfile        BuyerProfile?
+  sellerProfile       SellerProfile?
+  assets              Asset[]
+  favourites          Favourite[]
+  buyerConversations  Conversation[]     @relation("BuyerConversations")
+  sellerConversations Conversation[]     @relation("SellerConversations")
+  messages            Message[]
+  actionsPerformed    ModerationAction[] @relation("ModerationActor")
+  actionsReceived     ModerationAction[] @relation("ModerationTargetUser")
+
+  @@index([role, status])
+  @@map("users")
+}
+
+/// Server-side sessions, deliberately not JWT.
+/// A platform manager must be able to suspend a participant and have that take
+/// effect immediately; a stateless token would stay valid until it expired.
+/// Only the SHA-256 hash of the cookie value is stored.
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ---------------------------------------------------------------------------
+// Reference data (the marketplace taxonomy)
+// ---------------------------------------------------------------------------
+
+model Jurisdiction {
+  code   String @id @db.VarChar(8) // ISO 3166-1 alpha-2, e.g. LT, MT, SG
+  name   String
+  region String // EU, EEA, UK, APAC, LATAM, MENA, NORTH_AMERICA, OFFSHORE
+
+  assets         Asset[]
+  buyerTargets   BuyerTargetJurisdiction[]
+  sellerPresence SellerJurisdiction[]
+
+  @@index([region])
+  @@map("jurisdictions")
+}
+
+model LicenceCategory {
+  code        String  @id @db.VarChar(32) // EMI, PI, CASP, BANK, SPI, MTL...
+  name        String
+  description String? @db.Text
+
+  assets       Asset[]
+  buyerTargets BuyerTargetCategory[]
+
+  @@map("licence_categories")
+}
+
+// ---------------------------------------------------------------------------
+// Buyer side
+// ---------------------------------------------------------------------------
+
+enum InvestorType {
+  STRATEGIC
+  PRIVATE_EQUITY
+  VENTURE_CAPITAL
+  FAMILY_OFFICE
+  ANGEL
+  CORPORATE
+  OTHER
+}
+
+enum AcquisitionTimeline {
+  IMMEDIATE // under 3 months
+  SHORT     // 3-6 months
+  MEDIUM    // 6-12 months
+  EXPLORING // no fixed horizon
+}
+
+model BuyerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  companyName  String
+  headline     String  @db.VarChar(180)
+  about        String  @db.Text
+  websiteUrl   String?
+  country      String  @db.VarChar(8)
+  investorType InvestorType
+
+  /// Cheque size the buyer is willing to write, in EUR.
+  ticketMinEur Decimal @db.Decimal(18, 2)
+  ticketMaxEur Decimal @db.Decimal(18, 2)
+
+  timeline           AcquisitionTimeline @default(EXPLORING)
+  wantsOperatingOnly Boolean             @default(false) // skip dormant licences
+  proofOfFundsReady  Boolean             @default(false)
+  /// Free-text investment thesis. Feeds the AI matching prompt.
+  investmentThesis   String?             @db.Text
+  /// Controls visibility in the seller-facing buyer directory.
+  isPublished        Boolean             @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user                 User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetJurisdictions  BuyerTargetJurisdiction[]
+  targetCategories     BuyerTargetCategory[]
+  targetBusinessTypes  BuyerTargetBusinessType[]
+
+  @@index([investorType])
+  @@index([isPublished])
+  @@map("buyer_profiles")
+}
+
+model BuyerTargetJurisdiction {
+  buyerProfileId   String
+  jurisdictionCode String @db.VarChar(8)
+
+  buyerProfile BuyerProfile @relation(fields: [buyerProfileId], references: [id], onDelete: Cascade)
+  jurisdiction Jurisdiction @relation(fields: [jurisdictionCode], references: [code], onDelete: Cascade)
+
+  @@id([buyerProfileId, jurisdictionCode])
+  @@index([jurisdictionCode])
+  @@map("buyer_target_jurisdictions")
+}
+
+model BuyerTargetCategory {
+  buyerProfileId String
+  categoryCode   String @db.VarChar(32)
+
+  buyerProfile BuyerProfile    @relation(fields: [buyerProfileId], references: [id], onDelete: Cascade)
+  category     LicenceCategory @relation(fields: [categoryCode], references: [code], onDelete: Cascade)
+
+  @@id([buyerProfileId, categoryCode])
+  @@index([categoryCode])
+  @@map("buyer_target_categories")
+}
+
+model BuyerTargetBusinessType {
+  buyerProfileId String
+  businessType   BusinessType
+
+  buyerProfile BuyerProfile @relation(fields: [buyerProfileId], references: [id], onDelete: Cascade)
+
+  @@id([buyerProfileId, businessType])
+  @@index([businessType])
+  @@map("buyer_target_business_types")
+}
+
+// ---------------------------------------------------------------------------
+// Seller side
+// ---------------------------------------------------------------------------
+
+enum SellerType {
+  OWNER
+  BROKER
+  ADVISORY_FIRM
+}
+
+model SellerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  companyName String
+  headline    String     @db.VarChar(180)
+  about       String     @db.Text
+  websiteUrl  String?
+  country     String     @db.VarChar(8)
+  sellerType  SellerType
+  /// Set by a platform manager after KYC. Rendered as a badge.
+  isVerified  Boolean    @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  operatesIn SellerJurisdiction[]
+
+  @@map("seller_profiles")
+}
+
+model SellerJurisdiction {
+  sellerProfileId  String
+  jurisdictionCode String @db.VarChar(8)
+
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+  jurisdiction  Jurisdiction  @relation(fields: [jurisdictionCode], references: [code], onDelete: Cascade)
+
+  @@id([sellerProfileId, jurisdictionCode])
+  @@index([jurisdictionCode])
+  @@map("seller_jurisdictions")
+}
+
+// ---------------------------------------------------------------------------
+// Assets (the listings)
+// ---------------------------------------------------------------------------
+
+enum AssetStatus {
+  DRAFT
+  PUBLISHED
+  UNDER_OFFER
+  SOLD
+  /// Taken down by a platform manager; the seller still sees it, nobody else does.
+  SUSPENDED
+  ARCHIVED
+}
+
+/// Mirrors how N5Deal itself labels a listing: a licence that is live and
+/// trading, one still in application, or a clean shell sold as "licence only".
+enum LicenceStatus {
+  ACTIVE
+  IN_APPLICATION
+  DORMANT
+}
+
+/// The business axis, orthogonal to the licence category. N5Deal filters on
+/// both — a CASP licence can belong to a crypto exchange or to a payments group.
+enum BusinessType {
+  PAYMENT
+  FINTECH
+  CRYPTO
+  BANKING
+  FOREX
+  GAMING
+  OTHER
+}
+
+/// What comes with the company. On N5Deal these are the "included" chips on a
+/// listing card, and they are a filter axis, hence a join table rather than a
+/// JSON blob.
+enum AssetFeatureCode {
+  STAFF
+  OFFICE
+  BANK_ACCOUNTS
+  MULTI_CURRENCY
+  SOFTWARE_PLATFORM
+  PAYMENT_RAILS
+  CLIENT_BASE
+  SECURITY_AUDIT
+}
+
+model Asset {
+  id String @id @default(cuid())
+  /// Public, human-quotable number — listings are referenced as "#750" in
+  /// conversations with brokers, so it has to be short and stable.
+  referenceCode Int    @unique @default(autoincrement())
+  slug          String @unique
+  sellerId      String
+
+  title       String @db.VarChar(180)
+  summary     String @db.VarChar(400)
+  description String @db.Text
+
+  jurisdictionCode String       @db.VarChar(8)
+  categoryCode     String       @db.VarChar(32)
+  businessType     BusinessType
+
+  askingPriceEur Decimal? @db.Decimal(18, 2) // null means price on request
+  revenueEur     Decimal? @db.Decimal(18, 2)
+  ebitdaEur      Decimal? @db.Decimal(18, 2)
+
+  licenceStatus     LicenceStatus
+  /// Supervisory authority, e.g. FCA, CySEC, BoL, MFSA.
+  regulator         String? @db.VarChar(120)
+  licenceIssuedYear Int?
+  yearEstablished   Int?
+  employees         Int?
+  activeClients     Int?
+  hasPassporting    Boolean @default(false) // EU/EEA passporting rights
+  reasonForSale     String? @db.Text
+
+  status AssetStatus @default(DRAFT)
+  /// Due diligence confirmed by a platform manager — the "Validated" badge.
+  isValidated Boolean   @default(false)
+  publishedAt DateTime?
+  viewCount   Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  seller        User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  jurisdiction  Jurisdiction       @relation(fields: [jurisdictionCode], references: [code])
+  category      LicenceCategory    @relation(fields: [categoryCode], references: [code])
+  features      AssetFeature[]
+  favourites    Favourite[]
+  conversations Conversation[]
+  moderation    ModerationAction[] @relation("ModerationTargetAsset")
+
+  @@index([status, publishedAt])
+  @@index([jurisdictionCode])
+  @@index([categoryCode])
+  @@index([businessType])
+  @@index([sellerId])
+  @@index([askingPriceEur])
+  @@map("assets")
+}
+
+model AssetFeature {
+  assetId String
+  code    AssetFeatureCode
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@id([assetId, code])
+  @@index([code])
+  @@map("asset_features")
+}
+
+/// Buyer watchlist. Also drives the favourite counter on the listing card.
+model Favourite {
+  userId    String
+  assetId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@id([userId, assetId])
+  @@index([assetId])
+  @@map("favourites")
+}
+
+// ---------------------------------------------------------------------------
+// Contact between participants
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id       String  @id @default(cuid())
+  buyerId  String
+  sellerId String
+  /// Null when a seller reached out to a buyer from the buyer directory
+  /// rather than about one specific listing.
+  assetId  String?
+
+  subject       String   @db.VarChar(200)
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+
+  buyer    User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller   User      @relation("SellerConversations", fields: [sellerId], references: [id], onDelete: Cascade)
+  asset    Asset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  /// One thread per buyer/seller/asset triple — re-contacting reuses the thread
+  /// instead of spawning duplicates.
+  @@unique([buyerId, sellerId, assetId])
+  @@index([buyerId, lastMessageAt])
+  @@index([sellerId, lastMessageAt])
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String    @db.Text
+  createdAt      DateTime  @default(now())
+  readAt         DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// ---------------------------------------------------------------------------
+// Moderation audit trail
+// ---------------------------------------------------------------------------
+
+enum ModerationActionType {
+  USER_SUSPEND
+  USER_REINSTATE
+  USER_REMOVE
+  ASSET_SUSPEND
+  ASSET_REINSTATE
+  SELLER_VERIFY
+}
+
+/// Append-only. Nothing is ever hard-deleted, so the platform can always answer
+/// who removed a participant, when, and why.
+model ModerationAction {
+  id            String               @id @default(cuid())
+  actorId       String
+  type          ModerationActionType
+  targetUserId  String?
+  targetAssetId String?
+  reason        String               @db.Text
+  createdAt     DateTime             @default(now())
+
+  actor       User   @relation("ModerationActor", fields: [actorId], references: [id])
+  targetUser  User?  @relation("ModerationTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetAsset Asset? @relation("ModerationTargetAsset", fields: [targetAssetId], references: [id], onDelete: SetNull)
+
+  @@index([targetUserId, createdAt])
+  @@index([targetAssetId, createdAt])
+  @@index([createdAt])
+  @@map("moderation_actions")
+}
