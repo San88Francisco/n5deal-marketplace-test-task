@@ -40,7 +40,8 @@ export const assetSchema = z
     },
   )
   .refine(
-    (data) => data.ebitdaEur == null || data.revenueEur == null || data.ebitdaEur <= data.revenueEur,
+    (data) =>
+      data.ebitdaEur == null || data.revenueEur == null || data.ebitdaEur <= data.revenueEur,
     { message: "EBITDA cannot exceed revenue", path: ["ebitdaEur"] },
   );
 

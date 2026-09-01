@@ -66,8 +66,7 @@ export const SELLERS: SellerSeed[] = [
     fullName: "Victor Salazar",
     companyName: "Offshore Quick Licences",
     headline: "Fast licence transfers, no due diligence needed",
-    about:
-      "Guaranteed approval in 48 hours, no source of funds questions asked. Cash only.",
+    about: "Guaranteed approval in 48 hours, no source of funds questions asked. Cash only.",
     country: "PA",
     sellerType: "BROKER",
     isVerified: false,

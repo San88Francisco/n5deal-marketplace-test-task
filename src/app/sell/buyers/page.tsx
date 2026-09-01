@@ -45,7 +45,9 @@ export default async function BuyerDirectoryPage({
           jurisdictionCode: selectedAsset.jurisdictionCode,
           categoryCode: selectedAsset.categoryCode,
           businessType: selectedAsset.businessType,
-          askingPriceEur: selectedAsset.askingPriceEur ? Number(selectedAsset.askingPriceEur) : null,
+          askingPriceEur: selectedAsset.askingPriceEur
+            ? Number(selectedAsset.askingPriceEur)
+            : null,
           licenceStatus: selectedAsset.licenceStatus,
           isValidated: selectedAsset.isValidated,
         }
@@ -90,10 +92,7 @@ export default async function BuyerDirectoryPage({
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
         <Suspense fallback={<div className="h-96 rounded-card bg-ink-100" />}>
-          <BuyerFilters
-            jurisdictions={taxonomy.jurisdictions}
-            categories={taxonomy.categories}
-          />
+          <BuyerFilters jurisdictions={taxonomy.jurisdictions} categories={taxonomy.categories} />
         </Suspense>
 
         <div>
@@ -121,7 +120,8 @@ export default async function BuyerDirectoryPage({
             <div className="card grid place-items-center px-6 py-20 text-center">
               <p className="text-[16px] font-medium text-ink-900">No buyers match those filters</p>
               <p className="mt-1.5 max-w-[420px] text-[13.5px] text-ink-500">
-                Buyers who have unpublished their profile are never shown here, even when they match.
+                Buyers who have unpublished their profile are never shown here, even when they
+                match.
               </p>
               <Link
                 href={ROUTES.seller.buyers}

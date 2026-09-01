@@ -1,11 +1,17 @@
 import "server-only";
 
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/server/db";
 import type { AssetFilters } from "@/lib/validation";
 import { scoreMatch, type MatchableBuyer, type MatchResult } from "@/server/matching/score";
-import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT, PUBLIC_ASSET_STATUSES, USER_STATUS } from "@/constants";
+import {
+  CATALOGUE_PAGE_SIZE,
+  MATCH_SORT_SCAN_LIMIT,
+  PUBLIC_ASSET_STATUSES,
+  USER_STATUS,
+} from "@/constants";
 import type { Paginated } from "@/types";
 
 export const PAGE_SIZE = CATALOGUE_PAGE_SIZE;
@@ -40,7 +46,9 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
     and.push({ categoryCode: { in: filters.categories } });
   }
   if (filters.businessTypes.length) {
-    and.push({ businessType: { in: filters.businessTypes as Prisma.EnumBusinessTypeFilter["in"] } });
+    and.push({
+      businessType: { in: filters.businessTypes as Prisma.EnumBusinessTypeFilter["in"] },
+    });
   }
   if (filters.licenceStatuses.length) {
     and.push({
@@ -64,9 +72,7 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
 
     and.push(
       filters.includeOnRequest
-        ?
-
-          { OR: [{ askingPriceEur: range }, { askingPriceEur: null }] }
+        ? { OR: [{ askingPriceEur: range }, { askingPriceEur: null }] }
         : { askingPriceEur: range },
     );
   }
@@ -77,7 +83,6 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
 function orderBy(sort: AssetFilters["sort"]): Prisma.AssetOrderByWithRelationInput[] {
   switch (sort) {
     case "price_asc":
-
       return [{ askingPriceEur: { sort: "asc", nulls: "last" } }, { publishedAt: "desc" }];
     case "price_desc":
       return [{ askingPriceEur: { sort: "desc", nulls: "last" } }, { publishedAt: "desc" }];
@@ -109,7 +114,7 @@ export async function searchAssets(
     ? { take: MATCH_SORT_SCAN_LIMIT }
     : { skip: (filters.page - 1) * PAGE_SIZE, take: PAGE_SIZE };
 
-  const [total, rows] = await Promise.all([
+  const [total, requestedRows] = await Promise.all([
     prisma.asset.count({ where }),
     prisma.asset.findMany({
       where,
@@ -118,6 +123,19 @@ export async function searchAssets(
       ...pagination,
     }),
   ]);
+
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(filters.page, pageCount);
+  const rows =
+    !wantsMatchSort && page !== filters.page
+      ? await prisma.asset.findMany({
+          where,
+          include: listInclude,
+          orderBy: orderBy(filters.sort),
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+        })
+      : requestedRows;
 
   const { buyer } = options;
 
@@ -138,14 +156,14 @@ export async function searchAssets(
   const items = wantsMatchSort
     ? [...scored]
         .sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0))
-        .slice((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE)
+        .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
     : scored;
 
   return {
     items,
     total,
-    page: filters.page,
-    pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    page,
+    pageCount,
   };
 }
 
@@ -186,32 +204,55 @@ export async function getSellerAssets(sellerId: string): Promise<SellerAssetList
   });
 }
 
-export async function getTaxonomy() {
-  const [jurisdictions, categories] = await Promise.all([
-    prisma.jurisdiction.findMany({ orderBy: [{ region: "asc" }, { name: "asc" }] }),
-    prisma.licenceCategory.findMany({ orderBy: { name: "asc" } }),
-  ]);
+const getCachedTaxonomy = unstable_cache(
+  async () => {
+    const [jurisdictions, categories] = await Promise.all([
+      prisma.jurisdiction.findMany({ orderBy: [{ region: "asc" }, { name: "asc" }] }),
+      prisma.licenceCategory.findMany({ orderBy: { name: "asc" } }),
+    ]);
 
-  return { jurisdictions, categories };
+    return { jurisdictions, categories };
+  },
+  ["asset-taxonomy"],
+  { revalidate: 3600 },
+);
+
+export async function getTaxonomy() {
+  return getCachedTaxonomy();
 }
 
+const getCachedActiveFacets = unstable_cache(
+  async () => {
+    const [byJurisdiction, byCategory] = await Promise.all([
+      prisma.asset.groupBy({
+        by: ["jurisdictionCode"],
+        where: PUBLIC_ASSET_WHERE,
+        _count: { _all: true },
+      }),
+      prisma.asset.groupBy({
+        by: ["categoryCode"],
+        where: PUBLIC_ASSET_WHERE,
+        _count: { _all: true },
+      }),
+    ]);
+
+    return {
+      jurisdictionCounts: byJurisdiction.map(
+        (row) => [row.jurisdictionCode, row._count._all] as const,
+      ),
+      categoryCounts: byCategory.map((row) => [row.categoryCode, row._count._all] as const),
+    };
+  },
+  ["active-asset-facets"],
+  { tags: ["active-asset-facets"] },
+);
+
 export async function getActiveFacets() {
-  const [byJurisdiction, byCategory] = await Promise.all([
-    prisma.asset.groupBy({
-      by: ["jurisdictionCode"],
-      where: PUBLIC_ASSET_WHERE,
-      _count: { _all: true },
-    }),
-    prisma.asset.groupBy({
-      by: ["categoryCode"],
-      where: PUBLIC_ASSET_WHERE,
-      _count: { _all: true },
-    }),
-  ]);
+  const facets = await getCachedActiveFacets();
 
   return {
-    jurisdictionCounts: new Map(byJurisdiction.map((row) => [row.jurisdictionCode, row._count._all])),
-    categoryCounts: new Map(byCategory.map((row) => [row.categoryCode, row._count._all])),
+    jurisdictionCounts: new Map(facets.jurisdictionCounts),
+    categoryCounts: new Map(facets.categoryCounts),
   };
 }
 

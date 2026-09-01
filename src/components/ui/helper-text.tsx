@@ -17,7 +17,12 @@ const helperTextVariants = cva("inline-flex items-start gap-1.5 text-[12.5px] le
 
 type HelperTextProps = React.ComponentProps<"p"> & VariantProps<typeof helperTextVariants>;
 
-export function HelperText({ className, variant = "default", children, ...props }: HelperTextProps) {
+export function HelperText({
+  className,
+  variant = "default",
+  children,
+  ...props
+}: HelperTextProps) {
   const showsIcon = variant === "error" || variant === "warning";
 
   return (

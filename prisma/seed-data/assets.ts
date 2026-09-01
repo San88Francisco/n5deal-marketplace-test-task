@@ -53,7 +53,14 @@ export const ASSETS: AssetSeed[] = [
     status: "PUBLISHED",
     isValidated: true,
     viewCount: 341,
-    features: ["STAFF", "OFFICE", "BANK_ACCOUNTS", "MULTI_CURRENCY", "SOFTWARE_PLATFORM", "CLIENT_BASE"],
+    features: [
+      "STAFF",
+      "OFFICE",
+      "BANK_ACCOUNTS",
+      "MULTI_CURRENCY",
+      "SOFTWARE_PLATFORM",
+      "CLIENT_BASE",
+    ],
   },
   {
     sellerEmail: "seller@n5deal.demo",
@@ -215,7 +222,14 @@ export const ASSETS: AssetSeed[] = [
     status: "PUBLISHED",
     isValidated: false,
     viewCount: 776,
-    features: ["STAFF", "OFFICE", "MULTI_CURRENCY", "SOFTWARE_PLATFORM", "CLIENT_BASE", "SECURITY_AUDIT"],
+    features: [
+      "STAFF",
+      "OFFICE",
+      "MULTI_CURRENCY",
+      "SOFTWARE_PLATFORM",
+      "CLIENT_BASE",
+      "SECURITY_AUDIT",
+    ],
   },
   {
     sellerEmail: "malta.owner@n5deal.demo",
@@ -275,7 +289,8 @@ export const ASSETS: AssetSeed[] = [
     sellerEmail: "advisory.uk@n5deal.demo",
     slug: "irish-emi-sold-2025",
     title: "Irish e-money institution with SEPA and card issuing",
-    summary: "Central Bank of Ireland authorised EMI. Transaction completed — retained for reference.",
+    summary:
+      "Central Bank of Ireland authorised EMI. Transaction completed — retained for reference.",
     description:
       "An electronic money institution authorised by the Central Bank of Ireland with SEPA access and a card issuing programme. This transaction has completed; the listing is retained so that comparable pricing stays visible to the market.",
     jurisdictionCode: "IE",
@@ -295,7 +310,15 @@ export const ASSETS: AssetSeed[] = [
     status: "SOLD",
     isValidated: true,
     viewCount: 1_204,
-    features: ["STAFF", "OFFICE", "BANK_ACCOUNTS", "MULTI_CURRENCY", "SOFTWARE_PLATFORM", "PAYMENT_RAILS", "CLIENT_BASE"],
+    features: [
+      "STAFF",
+      "OFFICE",
+      "BANK_ACCOUNTS",
+      "MULTI_CURRENCY",
+      "SOFTWARE_PLATFORM",
+      "PAYMENT_RAILS",
+      "CLIENT_BASE",
+    ],
   },
   {
     sellerEmail: "broker.hk@n5deal.demo",
@@ -428,6 +451,13 @@ export const ASSETS: AssetSeed[] = [
     status: "PUBLISHED",
     isValidated: true,
     viewCount: 495,
-    features: ["STAFF", "OFFICE", "BANK_ACCOUNTS", "MULTI_CURRENCY", "PAYMENT_RAILS", "CLIENT_BASE"],
+    features: [
+      "STAFF",
+      "OFFICE",
+      "BANK_ACCOUNTS",
+      "MULTI_CURRENCY",
+      "PAYMENT_RAILS",
+      "CLIENT_BASE",
+    ],
   },
 ];

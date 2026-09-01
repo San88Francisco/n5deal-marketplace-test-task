@@ -178,7 +178,9 @@ export function AssetFilters({
               type="checkbox"
               className="mt-0.5 accent-navy-900"
               checked={params.get("includeOnRequest") !== "false"}
-              onChange={(event) => setParam("includeOnRequest", event.target.checked ? "" : "false")}
+              onChange={(event) =>
+                setParam("includeOnRequest", event.target.checked ? "" : "false")
+              }
             />
             Include listings priced on request
           </label>

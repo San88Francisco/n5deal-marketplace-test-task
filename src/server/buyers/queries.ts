@@ -41,7 +41,9 @@ export function buildBuyerWhere(filters: BuyerFilters): Prisma.BuyerProfileWhere
   }
 
   if (filters.jurisdictions.length) {
-    and.push({ targetJurisdictions: { some: { jurisdictionCode: { in: filters.jurisdictions } } } });
+    and.push({
+      targetJurisdictions: { some: { jurisdictionCode: { in: filters.jurisdictions } } },
+    });
   }
   if (filters.categories.length) {
     and.push({ targetCategories: { some: { categoryCode: { in: filters.categories } } } });
@@ -49,12 +51,16 @@ export function buildBuyerWhere(filters: BuyerFilters): Prisma.BuyerProfileWhere
   if (filters.businessTypes.length) {
     and.push({
       targetBusinessTypes: {
-        some: { businessType: { in: filters.businessTypes as Prisma.EnumBusinessTypeFilter["in"] } },
+        some: {
+          businessType: { in: filters.businessTypes as Prisma.EnumBusinessTypeFilter["in"] },
+        },
       },
     });
   }
   if (filters.investorTypes.length) {
-    and.push({ investorType: { in: filters.investorTypes as Prisma.EnumInvestorTypeFilter["in"] } });
+    and.push({
+      investorType: { in: filters.investorTypes as Prisma.EnumInvestorTypeFilter["in"] },
+    });
   }
   if (filters.timelines.length) {
     and.push({

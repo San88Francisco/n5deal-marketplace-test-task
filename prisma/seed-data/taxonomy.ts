@@ -40,15 +40,43 @@ export const JURISDICTIONS = [
 ];
 
 export const CATEGORIES = [
-  { code: "EMI", name: "Electronic Money Institution", description: "Full e-money issuance and payment accounts." },
+  {
+    code: "EMI",
+    name: "Electronic Money Institution",
+    description: "Full e-money issuance and payment accounts.",
+  },
   { code: "SEMI", name: "Small EMI", description: "Volume-capped e-money licence." },
-  { code: "PI", name: "Payment Institution", description: "Payment services without e-money issuance." },
-  { code: "SPI", name: "Small Payment Institution", description: "Volume-capped payment institution." },
+  {
+    code: "PI",
+    name: "Payment Institution",
+    description: "Payment services without e-money issuance.",
+  },
+  {
+    code: "SPI",
+    name: "Small Payment Institution",
+    description: "Volume-capped payment institution.",
+  },
   { code: "BANK", name: "Banking Licence", description: "Full credit institution." },
-  { code: "CASP", name: "Crypto-Asset Service Provider", description: "MiCA-scope crypto services." },
-  { code: "VASP", name: "Virtual Asset Service Provider", description: "Pre-MiCA / non-EU crypto registration." },
-  { code: "MSO", name: "Money Service Operator", description: "Hong Kong remittance and currency exchange." },
-  { code: "MTL", name: "Money Transmitter Licence", description: "US state-level money transmission." },
+  {
+    code: "CASP",
+    name: "Crypto-Asset Service Provider",
+    description: "MiCA-scope crypto services.",
+  },
+  {
+    code: "VASP",
+    name: "Virtual Asset Service Provider",
+    description: "Pre-MiCA / non-EU crypto registration.",
+  },
+  {
+    code: "MSO",
+    name: "Money Service Operator",
+    description: "Hong Kong remittance and currency exchange.",
+  },
+  {
+    code: "MTL",
+    name: "Money Transmitter Licence",
+    description: "US state-level money transmission.",
+  },
   { code: "INV", name: "Investment Firm", description: "MiFID II investment services." },
   { code: "FX", name: "FX / CFD Brokerage", description: "Retail and institutional FX brokerage." },
   { code: "INSUR", name: "Insurance Intermediary", description: "Insurance distribution licence." },

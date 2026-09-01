@@ -18,20 +18,20 @@ So the spine of the product I built is:
 
 > a structured profile of what each side wants → indexable filters over that
 > structure → a match score that ranks the other side → a contact thread that
-> preserves the context of *what* the conversation is about.
+> preserves the context of _what_ the conversation is about.
 
 Everything else — moderation, authentication, messaging — supports that spine.
 
 ### Deliberate scope decisions
 
-| Included | Left out (and why) |
-| --- | --- |
-| Three roles with real, separated permissions | Email delivery — nothing to demo, adds infra |
-| Structured buyer mandate + asset taxonomy | File uploads / data rooms — big surface, low signal |
-| Faceted search on both sides | Payments, escrow — out of prototype scope |
-| Threaded contact between buyer and seller | Real-time messaging — polling is enough to show the flow |
-| Moderation with an audit trail | Notifications centre |
-| AI matching with a deterministic fallback | Full-text relevance ranking (see §6) |
+| Included                                     | Left out (and why)                                       |
+| -------------------------------------------- | -------------------------------------------------------- |
+| Three roles with real, separated permissions | Email delivery — nothing to demo, adds infra             |
+| Structured buyer mandate + asset taxonomy    | File uploads / data rooms — big surface, low signal      |
+| Faceted search on both sides                 | Payments, escrow — out of prototype scope                |
+| Threaded contact between buyer and seller    | Real-time messaging — polling is enough to show the flow |
+| Moderation with an audit trail               | Notifications centre                                     |
+| AI matching with a deterministic fallback    | Full-text relevance ranking (see §6)                     |
 
 ## 2. Why one Next.js application
 
@@ -89,8 +89,6 @@ Repeated UI is data, not markup: filter sidebars, form steps, table columns and
 match sections are declared as config arrays in `constants/` and rendered with a
 `.map()`, so adding a facet or a column is a one-line change in one place.
 
-
-
 Route Handlers and Server Actions are thin: they parse input with Zod,
 call a guard, delegate to a module, and map the result to a response. No
 business logic lives in a page or a component. If this ever needs to become a
@@ -117,7 +115,7 @@ survives 50k listings and one that does not.
 **Reference tables, not enums, for the taxonomy.** Jurisdictions and licence
 categories live in tables. N5Deal operates in 30+ jurisdictions and that list
 moves with regulation; adding Georgia should be an INSERT, not a migration.
-Conversely `BusinessType`, `InvestorType` and the status fields *are* enums —
+Conversely `BusinessType`, `InvestorType` and the status fields _are_ enums —
 they are closed sets that only change when the product changes.
 
 **Three-state user lifecycle.** `ACTIVE / SUSPENDED / REMOVED`. Removal is a
@@ -183,7 +181,7 @@ a written reason and is appended to the audit trail, which is visible on each
 participant's detail view.
 
 The one UX decision I want to call out: the seller's buyer directory is not a
-flat list. It is ranked *against a selected listing*, because "browse buyers" in
+flat list. It is ranked _against a selected listing_, because "browse buyers" in
 the abstract is useless — a seller always browses buyers **for** something.
 
 ## 6. Search and filtering

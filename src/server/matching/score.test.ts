@@ -76,9 +76,7 @@ describe("scoreMatch", () => {
     );
 
     expect(strict.score).toBeLessThan(relaxed.score);
-    expect(strict.concerns).toContain(
-      "Buyer wants a trading business, this licence is not active",
-    );
+    expect(strict.concerns).toContain("Buyer wants a trading business, this licence is not active");
   });
 
   it("never returns a score outside 0-100", () => {

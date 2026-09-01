@@ -8,7 +8,8 @@ export const optionalUrl = z
   .optional()
   .or(z.literal(""));
 
-export const optionalText = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
+export const optionalText = (max: number) =>
+  z.string().trim().max(max).optional().or(z.literal(""));
 
 export const countryCode = z.string().trim().length(2, "Two-letter country code").toUpperCase();
 

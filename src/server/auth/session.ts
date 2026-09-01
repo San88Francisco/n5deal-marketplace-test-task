@@ -60,10 +60,7 @@ export async function destroySession(): Promise<void> {
 }
 
 export type AuthState =
-  | { status: "anonymous" }
-
-  | { status: "suspended"; user: User }
-  | { status: "active"; user: User };
+  { status: "anonymous" } | { status: "suspended"; user: User } | { status: "active"; user: User };
 
 export async function getAuthState(): Promise<AuthState> {
   const cookieStore = await cookies();

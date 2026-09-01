@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { moderationSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
@@ -39,5 +39,6 @@ export async function moderateAction(
   revalidatePath(ROUTES.manage.listings());
   revalidatePath(ROUTES.manage.audit);
   revalidatePath(ROUTES.assets.index);
+  revalidateTag("active-asset-facets");
   return { ok: true };
 }

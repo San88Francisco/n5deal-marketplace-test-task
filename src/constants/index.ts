@@ -109,7 +109,8 @@ export const MANAGED_LISTING_FILTER_SELECTS = [
 ];
 
 export const SMART_SEARCH_NOTICE = {
-  expired: "Your session expired. Sign in again to use plain-English search — showing keyword results meanwhile.",
+  expired:
+    "Your session expired. Sign in again to use plain-English search — showing keyword results meanwhile.",
   disabled: "AI search is not configured on this deployment — searching by keyword instead.",
   unparsable: "Could not interpret that. Searching by keyword instead.",
   failed: "AI search is unavailable right now. Searching by keyword instead.",

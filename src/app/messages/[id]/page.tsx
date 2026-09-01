@@ -12,11 +12,7 @@ import { ASSET_STATUS, USER_ROLE, USER_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Conversation" };
 
-export default async function ConversationPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireRole(USER_ROLE.BUYER, USER_ROLE.SELLER);
   const conversation = await getConversation(id, user.id);
@@ -73,9 +69,7 @@ export default async function ConversationPage({
                     : "border border-ink-100 bg-white text-ink-900 shadow-card"
                 }`}
               >
-                <p
-                  className={`text-[12px] ${mine ? "text-ink-300" : "text-ink-500"}`}
-                >
+                <p className={`text-[12px] ${mine ? "text-ink-300" : "text-ink-500"}`}>
                   {mine ? "You" : message.sender.fullName} · {formatRelative(message.createdAt)}
                 </p>
                 <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed">

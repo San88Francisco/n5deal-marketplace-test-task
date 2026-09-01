@@ -40,8 +40,8 @@ export function AssetSellerCard({ asset }: { asset: AssetDetail }) {
       )}
 
       <p className="mt-4 border-t border-ink-100 pt-3 text-[12px] text-ink-300">
-        Listed {formatDate(asset.publishedAt ?? asset.createdAt)} ·{" "}
-        {formatNumber(asset.viewCount)} views · {formatNumber(asset._count.favourites)} saved
+        Listed {formatDate(asset.publishedAt ?? asset.createdAt)} · {formatNumber(asset.viewCount)}{" "}
+        views · {formatNumber(asset._count.favourites)} saved
       </p>
     </div>
   );

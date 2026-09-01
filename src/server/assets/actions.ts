@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { prisma } from "@/server/db";
 import { assetSchema } from "@/lib/validation";
-import { assertRole, AuthorizationError } from "@/server/auth/guards";
+import { assertRole, AuthorizationError, roleOrNull } from "@/server/auth/guards";
 import { ASSET_STATUS, SELLER_MANAGED_STATUSES, USER_ROLE, USER_STATUS } from "@/constants";
 import { ROUTES } from "@/routes";
 
@@ -64,7 +64,11 @@ export async function saveAssetAction(
           data: {
             ...toAssetData(parsed.data),
             slug,
-            status: publish ? (existing.status === ASSET_STATUS.DRAFT ? ASSET_STATUS.PUBLISHED : existing.status) : existing.status,
+            status: publish
+              ? existing.status === ASSET_STATUS.DRAFT
+                ? ASSET_STATUS.PUBLISHED
+                : existing.status
+              : existing.status,
             publishedAt: publish && !existing.publishedAt ? new Date() : existing.publishedAt,
             features: { create: parsed.data.features.map((code) => ({ code })) },
           },
@@ -90,6 +94,7 @@ export async function saveAssetAction(
 
   revalidatePath(ROUTES.seller.listings);
   revalidatePath(ROUTES.assets.index);
+  revalidateTag("active-asset-facets");
   return { ok: true };
 }
 
@@ -123,7 +128,9 @@ export async function setAssetStatusAction(formData: FormData) {
     return;
   }
 
-  const user = await assertRole(USER_ROLE.SELLER);
+  const user = await roleOrNull(USER_ROLE.SELLER);
+  if (!user) return;
+
   const asset = await prisma.asset.findUnique({ where: { id: assetId } });
   if (!asset || asset.sellerId !== user.id || asset.status === ASSET_STATUS.SUSPENDED) return;
 
@@ -131,17 +138,21 @@ export async function setAssetStatusAction(formData: FormData) {
     where: { id: assetId },
     data: {
       status: status as never,
-      publishedAt: status === ASSET_STATUS.PUBLISHED && !asset.publishedAt ? new Date() : asset.publishedAt,
+      publishedAt:
+        status === ASSET_STATUS.PUBLISHED && !asset.publishedAt ? new Date() : asset.publishedAt,
     },
   });
 
   revalidatePath(ROUTES.seller.listings);
   revalidatePath(ROUTES.assets.index);
+  revalidateTag("active-asset-facets");
 }
 
 export async function toggleFavouriteAction(formData: FormData) {
   const assetId = String(formData.get("assetId"));
-  const user = await assertRole(USER_ROLE.BUYER);
+
+  const user = await roleOrNull(USER_ROLE.BUYER);
+  if (!user) return;
 
   const existing = await prisma.favourite.findUnique({
     where: { userId_assetId: { userId: user.id, assetId } },

@@ -65,7 +65,8 @@ export function BuyerCard({
         <div className="flex justify-between gap-3">
           <dt className="text-ink-500">Cheque size</dt>
           <dd className="tabular font-medium text-ink-900">
-            {formatMoneyShort(buyer.ticketMinEur, "—")} – {formatMoneyShort(buyer.ticketMaxEur, "—")}
+            {formatMoneyShort(buyer.ticketMinEur, "—")} –{" "}
+            {formatMoneyShort(buyer.ticketMaxEur, "—")}
           </dd>
         </div>
         <div className="flex justify-between gap-3">
@@ -88,9 +89,7 @@ export function BuyerCard({
             {flagEmoji(jurisdiction.code)} {jurisdiction.code}
           </Badge>
         ))}
-        {jurisdictions.length > 4 && (
-          <Badge tone="neutral">+{jurisdictions.length - 4}</Badge>
-        )}
+        {jurisdictions.length > 4 && <Badge tone="neutral">+{jurisdictions.length - 4}</Badge>}
       </div>
 
       <div className="mt-1.5 flex flex-wrap gap-1">

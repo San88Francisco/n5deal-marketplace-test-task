@@ -210,7 +210,10 @@ async function main() {
     data: [
       { userId: nordway, assetId: assetsBySlug.get("lithuanian-emi-full-passporting-since-2019")! },
       { userId: nordway, assetId: assetsBySlug.get("bulgarian-emi-with-multicurrency-iban")! },
-      { userId: familyOffice, assetId: assetsBySlug.get("hong-kong-mso-remittance-operating-since-2018")! },
+      {
+        userId: familyOffice,
+        assetId: assetsBySlug.get("hong-kong-mso-remittance-operating-since-2018")!,
+      },
     ],
   });
 
@@ -229,14 +232,16 @@ async function main() {
         actorId: manager.id,
         type: "ASSET_SUSPEND",
         targetAssetId: assetsBySlug.get("panama-financial-licence-fast-transfer")!,
-        reason: "Advertises guaranteed licence transfer without due diligence. Breaches platform listing rules.",
+        reason:
+          "Advertises guaranteed licence transfer without due diligence. Breaches platform listing rules.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72),
       },
       {
         actorId: manager.id,
         type: "SELLER_VERIFY",
         targetUserId: balticSeller,
-        reason: "KYB documents verified: certificate of incorporation, shareholder register, regulator confirmation.",
+        reason:
+          "KYB documents verified: certificate of incorporation, shareholder register, regulator confirmation.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 240),
       },
     ],

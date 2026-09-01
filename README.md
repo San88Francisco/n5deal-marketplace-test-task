@@ -39,13 +39,13 @@ If port 3000 is taken: `npx next dev -p 3100`.
 
 Other useful scripts:
 
-| Command | What it does |
-| --- | --- |
-| `npm test` | Unit tests (Vitest) for the match-scoring engine |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run db:studio` | Prisma Studio |
-| `npm run db:reset` | Drop, re-migrate and re-seed |
-| `npm run db:down` | Stop the MySQL container |
+| Command             | What it does                                     |
+| ------------------- | ------------------------------------------------ |
+| `npm test`          | Unit tests (Vitest) for the match-scoring engine |
+| `npm run typecheck` | `tsc --noEmit`                                   |
+| `npm run db:studio` | Prisma Studio                                    |
+| `npm run db:reset`  | Drop, re-migrate and re-seed                     |
+| `npm run db:down`   | Stop the MySQL container                         |
 
 ## Deployment
 
@@ -55,10 +55,10 @@ development rather than swapping to Postgres for hosting reasons.
 
 Environment variables on the host:
 
-| Variable | Notes |
-| --- | --- |
-| `DATABASE_URL` | Append `?sslaccept=strict&connection_limit=1` — TiDB requires TLS, and each serverless instance must hold a single connection or the pool is exhausted under load |
-| `GEMINI_API_KEY` | Optional; without it the AI features degrade to keyword search |
+| Variable         | Notes                                                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | Append `?sslaccept=strict&connection_limit=1` — TiDB requires TLS, and each serverless instance must hold a single connection or the pool is exhausted under load |
+| `GEMINI_API_KEY` | Optional; without it the AI features degrade to keyword search                                                                                                    |
 
 Migrations and seed data are applied against the remote database once, from a
 machine that has the repository:
@@ -78,11 +78,11 @@ failing the request.
 Password for all three: `n5deal-demo-2026` (they are also listed on the sign-in
 page, one click fills the form).
 
-| Role | Email | What they show |
-| --- | --- | --- |
-| Buyer | `buyer@n5deal.demo` | A funded EMI mandate, live match scores, a watchlist and an open thread |
-| Seller | `seller@n5deal.demo` | Three listings including a draft, plus the ranked buyer directory |
-| Platform manager | `manager@n5deal.demo` | Moderation console with a suspended seller already in the audit trail |
+| Role             | Email                 | What they show                                                          |
+| ---------------- | --------------------- | ----------------------------------------------------------------------- |
+| Buyer            | `buyer@n5deal.demo`   | A funded EMI mandate, live match scores, a watchlist and an open thread |
+| Seller           | `seller@n5deal.demo`  | Three listings including a draft, plus the ranked buyer directory       |
+| Platform manager | `manager@n5deal.demo` | Moderation console with a suspended seller already in the audit trail   |
 
 The seed also contains a suspended seller and a suspended listing, so the
 moderation and "not available" paths can be seen without breaking anything.
@@ -108,7 +108,7 @@ layered `src/server/` module tree; Route Handlers and Server Actions are thin
 adapters over it.
 
 **Server-side sessions instead of JWT.** A platform manager has to be able to
-suspend a participant and have it take effect *immediately*. A stateless token
+suspend a participant and have it take effect _immediately_. A stateless token
 stays valid until it expires. With a session row the guard re-reads the user's
 status on every request, so a suspension applies on their very next click. That
 one product requirement is what ruled out the obvious library setup.
@@ -142,7 +142,7 @@ The brief is deliberately open, so these are my calls rather than requirements:
 - **The scarce resource is relevance, not listings.** A buyer does not want 200
   results, they want the four that fit their mandate. That reading shaped the
   whole product: structured mandates → indexable filters → ranking → contact.
-- **Sellers browse buyers *for* a listing**, never in the abstract. The buyer
+- **Sellers browse buyers _for_ a listing**, never in the abstract. The buyer
   directory is therefore ranked against a selected asset, not a flat list.
 - **One currency (EUR).** Multi-currency means storing amount + currency +
   rate-at-quote-time, which is a feature of its own.
@@ -162,7 +162,7 @@ The brief is deliberately open, so these are my calls rather than requirements:
 
 - Suspending a user ends their sessions immediately; their listings leave the
   public index and their threads become read-only, while the history stays
-  readable. They see *why* they are locked out, not a generic error.
+  readable. They see _why_ they are locked out, not a generic error.
 - An asset whose seller is suspended disappears from search even though the
   asset row itself is still `PUBLISHED`.
 - Contacting the same seller about the same listing twice reuses the thread

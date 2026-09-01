@@ -40,11 +40,7 @@ const parsedQuerySchema = z.object({
   jurisdictions: z.array(z.string().max(8)).max(20).default([]),
   categories: z.array(z.string().max(32)).max(20).default([]),
   businessTypes: z.array(z.enum(BUSINESS_TYPES)).max(10).catch([]).default([]),
-  licenceStatuses: z
-    .array(z.enum(LICENCE_STATUSES))
-    .max(3)
-    .catch([])
-    .default([]),
+  licenceStatuses: z.array(z.enum(LICENCE_STATUSES)).max(3).catch([]).default([]),
   priceMin: z.number().min(0).max(10_000_000_000).nullable().default(null),
   priceMax: z.number().min(0).max(10_000_000_000).nullable().default(null),
   validatedOnly: z.boolean().default(false),
@@ -55,8 +51,7 @@ const parsedQuerySchema = z.object({
 export type ParsedQuery = z.infer<typeof parsedQuerySchema>;
 
 export type SmartQueryResult =
-  | { ok: true; filters: ParsedQuery }
-  | { ok: false; reason: "disabled" | "failed" | "unparsable" };
+  { ok: true; filters: ParsedQuery } | { ok: false; reason: "disabled" | "failed" | "unparsable" };
 
 export async function parseSmartQuery(
   query: string,
@@ -68,12 +63,8 @@ export async function parseSmartQuery(
   const ai = getClient();
   if (!ai) return { ok: false, reason: "disabled" };
 
-  const jurisdictionList = taxonomy.jurisdictions
-    .map((j) => `${j.code} (${j.name})`)
-    .join(", ");
-  const categoryList = taxonomy.categories
-    .map((c) => `${c.code} (${c.name})`)
-    .join(", ");
+  const jurisdictionList = taxonomy.jurisdictions.map((j) => `${j.code} (${j.name})`).join(", ");
+  const categoryList = taxonomy.categories.map((c) => `${c.code} (${c.name})`).join(", ");
 
   try {
     const response = await withRetry(() =>
@@ -85,7 +76,7 @@ export async function parseSmartQuery(
             "You convert a plain-English search request into filters for a marketplace of regulated financial companies and licences.",
             "Only use codes from the lists provided. If the request does not mention something, leave that filter empty — never guess.",
             "Amounts are in EUR. Interpret 'under 2m' as priceMax 2000000, 'at least 500k' as priceMin 500000.",
-            "'Trading', 'operating' or 'live' means licenceStatuses ACTIVE. 'Shelf', 'clean' or 'dormant' means DORMANT.",
+            "'Trading', 'operating' or 'live' means licenceStatuses ACTIVE. 'Shelf', 'clean shell' or 'dormant' means DORMANT — a 'clean record' or 'clean history' is not a licence status.",
             "Put anything you could not map to a filter into keywords, or null if nothing is left.",
             "interpretation is one short sentence, addressed to the user, describing what you filtered for.",
             `Jurisdiction codes: ${jurisdictionList}`,
@@ -135,21 +126,15 @@ export async function parseSmartQuery(
     const parsed = parsedQuerySchema.safeParse(safeJsonParse(text));
     if (!parsed.success) return { ok: false, reason: "unparsable" };
 
-    const validJurisdictions = new Set(
-      taxonomy.jurisdictions.map((j) => j.code),
-    );
+    const validJurisdictions = new Set(taxonomy.jurisdictions.map((j) => j.code));
     const validCategories = new Set(taxonomy.categories.map((c) => c.code));
 
     return {
       ok: true,
       filters: {
         ...parsed.data,
-        jurisdictions: parsed.data.jurisdictions.filter((code) =>
-          validJurisdictions.has(code),
-        ),
-        categories: parsed.data.categories.filter((code) =>
-          validCategories.has(code),
-        ),
+        jurisdictions: parsed.data.jurisdictions.filter((code) => validJurisdictions.has(code)),
+        categories: parsed.data.categories.filter((code) => validCategories.has(code)),
       },
     };
   } catch (error) {

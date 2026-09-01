@@ -38,7 +38,8 @@ export default async function WatchlistPage() {
   const items = favourites.map((favourite) => ({
     ...favourite.asset,
     unavailable:
-      favourite.asset.seller.status !== USER_STATUS.ACTIVE || favourite.asset.status === ASSET_STATUS.SUSPENDED,
+      favourite.asset.seller.status !== USER_STATUS.ACTIVE ||
+      favourite.asset.status === ASSET_STATUS.SUSPENDED,
     match: buyer
       ? scoreMatch(buyer, {
           jurisdictionCode: favourite.asset.jurisdictionCode,
@@ -86,7 +87,8 @@ export default async function WatchlistPage() {
             <section className="mt-12">
               <h2 className="text-[16px] font-semibold text-ink-900">No longer available</h2>
               <p className="mt-1 text-[13.5px] text-ink-500">
-                These are kept on your list, but the listing or its seller is currently under review.
+                These are kept on your list, but the listing or its seller is currently under
+                review.
               </p>
               <div className="mt-4 grid gap-5 opacity-60 sm:grid-cols-2 xl:grid-cols-3">
                 {unavailable.map((asset) => (

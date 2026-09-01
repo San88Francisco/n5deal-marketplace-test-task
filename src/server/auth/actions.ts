@@ -71,7 +71,9 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const headerList = await headers();
   await createSession(user.id, headerList.get("user-agent") ?? undefined);
 
-  redirect(parsed.data.role === USER_ROLE.BUYER ? "/account/buyer-profile" : "/account/seller-profile");
+  redirect(
+    parsed.data.role === USER_ROLE.BUYER ? "/account/buyer-profile" : "/account/seller-profile",
+  );
 }
 
 export async function signOutAction() {

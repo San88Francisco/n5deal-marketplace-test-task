@@ -29,10 +29,7 @@ export function Pagination({
   };
 
   const pages = Array.from({ length: pageCount }, (_, index) => index + 1).filter(
-    (candidate) =>
-      candidate === 1 ||
-      candidate === pageCount ||
-      Math.abs(candidate - page) <= 1,
+    (candidate) => candidate === 1 || candidate === pageCount || Math.abs(candidate - page) <= 1,
   );
 
   return (

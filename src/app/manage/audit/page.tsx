@@ -56,15 +56,16 @@ export default async function AuditPage() {
                     "Target no longer exists"
                   )}
                 </span>
-                <span className="ml-auto text-[12px] text-ink-300" title={formatDate(action.createdAt)}>
+                <span
+                  className="ml-auto text-[12px] text-ink-300"
+                  title={formatDate(action.createdAt)}
+                >
                   {formatRelative(action.createdAt)}
                 </span>
               </div>
 
               <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-700">{action.reason}</p>
-              <p className="mt-2 text-[12px] text-ink-500">
-                Recorded by {action.actor.fullName}
-              </p>
+              <p className="mt-2 text-[12px] text-ink-500">Recorded by {action.actor.fullName}</p>
             </li>
           ))}
         </ol>

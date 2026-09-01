@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 
 import { AssetBadgeRow } from "@/components/assets/asset-detail/asset-badge-row";
 import { AssetDescription } from "@/components/assets/asset-detail/asset-description";
@@ -8,14 +9,16 @@ import { AssetFacts } from "@/components/assets/asset-detail/asset-facts";
 import { AssetFeatures } from "@/components/assets/asset-detail/asset-features";
 import { AssetPricingCard } from "@/components/assets/asset-detail/asset-pricing-card";
 import { AssetSellerCard } from "@/components/assets/asset-detail/asset-seller-card";
-import { ASSET_STATUS, USER_ROLE, USER_STATUS } from "@/constants";
+import { ASSET_STATUS, USER_ROLE } from "@/constants";
 import { toMatchableAsset } from "@/mappers/asset-form";
 import { ROUTES } from "@/routes";
 import { getAssetBySlug, recordAssetView } from "@/server/assets/queries";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { getCurrentUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { isAiEnabled } from "@/server/matching/ai";
 import { scoreMatch } from "@/server/matching/score";
+import { isActive, isPublicAssetStatus } from "@/utils/domain";
 
 export async function generateMetadata({
   params,
@@ -40,10 +43,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
   const isManager = user?.role === USER_ROLE.PLATFORM_MANAGER;
   const isBuyer = user?.role === USER_ROLE.BUYER;
 
-  const publiclyVisible =
-    asset.status !== ASSET_STATUS.SUSPENDED &&
-    asset.status !== ASSET_STATUS.DRAFT &&
-    asset.seller.status === USER_STATUS.ACTIVE;
+  const publiclyVisible = isPublicAssetStatus(asset.status) && isActive(asset.seller.status);
 
   if (!publiclyVisible && !isOwner && !isManager) notFound();
 
@@ -58,7 +58,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
       })) !== null
     : false;
 
-  if (!isOwner && !isManager) await recordAssetView(asset.id);
+  if (!isOwner && !isManager) after(() => recordAssetView(asset.id));
 
   return (
     <div className="container-page py-10">
@@ -92,12 +92,12 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
           <AssetPricingCard
             asset={asset}
             match={match}
-            canContact={isBuyer && asset.seller.status === USER_STATUS.ACTIVE && publiclyVisible}
+            canContact={isBuyer && publiclyVisible}
             canFavourite={isBuyer}
             favourited={favourited}
             isOwner={isOwner}
             isAnonymous={!user}
-            showThesisExplainer={Boolean(buyerProfile?.investmentThesis)}
+            showThesisExplainer={Boolean(buyerProfile?.investmentThesis) && isAiEnabled()}
           />
 
           <AssetSellerCard asset={asset} />

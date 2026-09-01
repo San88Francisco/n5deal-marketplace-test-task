@@ -11,9 +11,7 @@ type SellerProfileRecord = {
   operatesIn: { jurisdictionCode: string }[];
 };
 
-export const toBuyerFormValues = (
-  profile: BuyerListItem | null,
-): Partial<BuyerProfileInput> =>
+export const toBuyerFormValues = (profile: BuyerListItem | null): Partial<BuyerProfileInput> =>
   profile
     ? {
         companyName: profile.companyName,

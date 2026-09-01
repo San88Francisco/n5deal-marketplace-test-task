@@ -8,10 +8,7 @@ import {
   type UseFormReturn,
 } from "react-hook-form";
 
-type RHFFormProps<T extends FieldValues> = Omit<
-  FormHTMLAttributes<HTMLFormElement>,
-  "onSubmit"
-> & {
+type RHFFormProps<T extends FieldValues> = Omit<FormHTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   form: UseFormReturn<T>;
   onSubmit: SubmitHandler<T>;
   children: ReactNode;

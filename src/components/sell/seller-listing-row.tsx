@@ -14,7 +14,11 @@ export function SellerListingRow({ asset }: { asset: SellerAssetListItem }) {
   const isSuspended = asset.status === ASSET_STATUS.SUSPENDED;
 
   const stats = [
-    { label: "Views", value: formatNumber(asset.viewCount), icon: <Eye className="h-3.5 w-3.5" aria-hidden /> },
+    {
+      label: "Views",
+      value: formatNumber(asset.viewCount),
+      icon: <Eye className="h-3.5 w-3.5" aria-hidden />,
+    },
     {
       label: "Saved",
       value: formatNumber(asset._count.favourites),

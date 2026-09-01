@@ -6,7 +6,10 @@ import { ROUTES } from "@/routes";
 
 export function MatchExplainer({ assetId }: { assetId: string }) {
   const [state, setState] = useState<
-    { status: "idle" } | { status: "loading" } | { status: "done"; text: string } | { status: "error" }
+    | { status: "idle" }
+    | { status: "loading" }
+    | { status: "done"; text: string }
+    | { status: "error" }
   >({ status: "idle" });
 
   async function load() {

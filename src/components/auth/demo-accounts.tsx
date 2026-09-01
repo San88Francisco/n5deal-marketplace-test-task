@@ -30,10 +30,7 @@ export function DemoAccounts() {
     const passwordField = document.querySelector<HTMLInputElement>("#password");
     if (!emailField || !passwordField) return;
 
-    const setter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      "value",
-    )?.set;
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
     setter?.call(emailField, email);
     emailField.dispatchEvent(new Event("input", { bubbles: true }));
     setter?.call(passwordField, PASSWORD);
@@ -51,7 +48,9 @@ export function DemoAccounts() {
         <p className="mt-2 text-[14px] leading-relaxed text-ink-200">
           This is a prototype with seeded data. Pick a role to explore — every account uses the
           password{" "}
-          <code className="rounded bg-navy-800 px-1.5 py-0.5 text-[13px] text-white">{PASSWORD}</code>
+          <code className="rounded bg-navy-800 px-1.5 py-0.5 text-[13px] text-white">
+            {PASSWORD}
+          </code>
           .
         </p>
 

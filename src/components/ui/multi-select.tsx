@@ -40,7 +40,10 @@ export function MultiSelect({
 
   return (
     <div
-      className={cn("rounded-md border bg-white", invalid ? "border-critical-500" : "border-ink-200")}
+      className={cn(
+        "rounded-md border bg-white",
+        invalid ? "border-critical-500" : "border-ink-200",
+      )}
     >
       {searchable && (
         <div className="border-b border-ink-100 p-2">

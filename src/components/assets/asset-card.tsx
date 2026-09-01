@@ -102,9 +102,7 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
             </li>
           ))}
           {asset.features.length > 4 && (
-            <li className="px-1 py-0.5 text-[11px] text-ink-300">
-              +{asset.features.length - 4}
-            </li>
+            <li className="px-1 py-0.5 text-[11px] text-ink-300">+{asset.features.length - 4}</li>
           )}
         </ul>
       )}

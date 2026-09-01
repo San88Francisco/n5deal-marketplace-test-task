@@ -29,7 +29,9 @@ export default async function SuspendedPage() {
             <p className="text-[12px] font-semibold uppercase tracking-wider text-caution-700">
               Reason given
             </p>
-            <p className="mt-1 text-[14px] leading-relaxed text-ink-900">{state.user.statusReason}</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-ink-900">
+              {state.user.statusReason}
+            </p>
           </div>
         )}
 

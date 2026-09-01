@@ -6,7 +6,13 @@ import { prisma } from "@/server/db";
 import { AuthorizationError } from "@/server/auth/guards";
 import type { ManagedAssetFilters, ModerationInput, ParticipantFilters } from "@/lib/validation";
 import type { Paginated } from "@/types";
-import { ADMIN_PAGE_SIZE, ASSET_STATUS, MODERATION_ACTION, USER_ROLE, USER_STATUS } from "@/constants";
+import {
+  ADMIN_PAGE_SIZE,
+  ASSET_STATUS,
+  MODERATION_ACTION,
+  USER_ROLE,
+  USER_STATUS,
+} from "@/constants";
 
 export const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
@@ -60,7 +66,10 @@ export async function applyModeration(actorId: string, input: ModerationInput) {
           prisma.session.deleteMany({ where: { userId: target.id } }),
 
           prisma.asset.updateMany({
-            where: { sellerId: target.id, status: { notIn: [ASSET_STATUS.SOLD, ASSET_STATUS.ARCHIVED] } },
+            where: {
+              sellerId: target.id,
+              status: { notIn: [ASSET_STATUS.SOLD, ASSET_STATUS.ARCHIVED] },
+            },
             data: { status: ASSET_STATUS.ARCHIVED },
           }),
         );
@@ -227,7 +236,9 @@ export async function getPlatformStats() {
   const [buyers, sellers, published, suspended, conversations, unvalidated] = await Promise.all([
     prisma.user.count({ where: { role: USER_ROLE.BUYER, status: USER_STATUS.ACTIVE } }),
     prisma.user.count({ where: { role: USER_ROLE.SELLER, status: USER_STATUS.ACTIVE } }),
-    prisma.asset.count({ where: { status: { in: [ASSET_STATUS.PUBLISHED, ASSET_STATUS.UNDER_OFFER] } } }),
+    prisma.asset.count({
+      where: { status: { in: [ASSET_STATUS.PUBLISHED, ASSET_STATUS.UNDER_OFFER] } },
+    }),
     prisma.user.count({ where: { status: { in: [USER_STATUS.SUSPENDED, USER_STATUS.REMOVED] } } }),
     prisma.conversation.count(),
     prisma.asset.count({ where: { status: ASSET_STATUS.PUBLISHED, isValidated: false } }),

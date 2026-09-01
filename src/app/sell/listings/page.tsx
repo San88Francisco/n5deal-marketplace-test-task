@@ -30,7 +30,9 @@ export default async function SellerListingsPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">{profile.companyName}</p>
-          <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-ink-900">My listings</h1>
+          <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-ink-900">
+            My listings
+          </h1>
           <p className="mt-1 text-[14px] text-ink-500">
             {live.length} live · {drafts.length} draft{drafts.length === 1 ? "" : "s"} ·{" "}
             {assets.length} total

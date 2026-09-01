@@ -54,7 +54,9 @@ export function AssetPicker({
           }
           next.delete("page");
 
-          startTransition(() => router.replace(`/sell/buyers?${next.toString()}`, { scroll: false }));
+          startTransition(() =>
+            router.replace(`/sell/buyers?${next.toString()}`, { scroll: false }),
+          );
         }}
       />
       {selectedId && (

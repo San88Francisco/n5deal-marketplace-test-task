@@ -13,11 +13,7 @@ import { ASSET_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Edit listing" };
 
-export default async function EditListingPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireSeller();
 

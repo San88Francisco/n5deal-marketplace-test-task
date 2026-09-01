@@ -25,7 +25,9 @@ export function SortSelect({
           const next = new URLSearchParams(params.toString());
           next.set("sort", event.target.value);
           next.delete("page");
-          startTransition(() => router.replace(`${basePath}?${next.toString()}`, { scroll: false }));
+          startTransition(() =>
+            router.replace(`${basePath}?${next.toString()}`, { scroll: false }),
+          );
         }}
         className="field h-9 w-auto py-0 text-[13px]"
       >

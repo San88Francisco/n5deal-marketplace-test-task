@@ -73,7 +73,9 @@ export async function SiteHeader() {
               <div className="hidden text-right sm:block">
                 <p className="text-[13px] font-medium leading-tight text-white">{user.fullName}</p>
                 <p className="text-[11px] uppercase tracking-wider text-ink-300">
-                  {user.role === USER_ROLE.PLATFORM_MANAGER ? "Platform manager" : user.role.toLowerCase()}
+                  {user.role === USER_ROLE.PLATFORM_MANAGER
+                    ? "Platform manager"
+                    : user.role.toLowerCase()}
                 </p>
               </div>
               <form action={signOutAction}>
@@ -89,7 +91,12 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="text-ink-200 hover:bg-navy-900 hover:text-white">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-ink-200 hover:bg-navy-900 hover:text-white"
+              >
                 <Link href={ROUTES.auth.signIn}>Sign in</Link>
               </Button>
               <Button asChild variant="accent" size="sm">

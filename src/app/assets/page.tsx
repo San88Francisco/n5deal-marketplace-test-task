@@ -115,7 +115,9 @@ export default async function AssetsPage({
             </>
           ) : (
             <div className="card grid place-items-center px-6 py-20 text-center">
-              <p className="text-[16px] font-medium text-ink-900">No listings match those filters</p>
+              <p className="text-[16px] font-medium text-ink-900">
+                No listings match those filters
+              </p>
               <p className="mt-1.5 max-w-[420px] text-[13.5px] text-ink-500">
                 Try widening the jurisdiction or price range. Assets that are priced on request are
                 included by default — check that you have not switched them off.

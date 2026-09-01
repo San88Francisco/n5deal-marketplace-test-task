@@ -17,8 +17,14 @@ export async function startConversation(params: {
   const sellerId = params.actorRole === USER_ROLE.SELLER ? params.actorId : params.counterpartyId;
 
   const [buyer, seller] = await Promise.all([
-    prisma.user.findUnique({ where: { id: buyerId }, select: { id: true, role: true, status: true } }),
-    prisma.user.findUnique({ where: { id: sellerId }, select: { id: true, role: true, status: true } }),
+    prisma.user.findUnique({
+      where: { id: buyerId },
+      select: { id: true, role: true, status: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: sellerId },
+      select: { id: true, role: true, status: true },
+    }),
   ]);
 
   if (!buyer || buyer.role !== USER_ROLE.BUYER) throw new AuthorizationError("Buyer not found");
@@ -112,8 +118,22 @@ export async function listConversations(userId: string) {
     where: { OR: [{ buyerId: userId }, { sellerId: userId }] },
     include: {
       asset: { select: { id: true, slug: true, title: true, referenceCode: true, status: true } },
-      buyer: { select: { id: true, fullName: true, status: true, buyerProfile: { select: { companyName: true } } } },
-      seller: { select: { id: true, fullName: true, status: true, sellerProfile: { select: { companyName: true } } } },
+      buyer: {
+        select: {
+          id: true,
+          fullName: true,
+          status: true,
+          buyerProfile: { select: { companyName: true } },
+        },
+      },
+      seller: {
+        select: {
+          id: true,
+          fullName: true,
+          status: true,
+          sellerProfile: { select: { companyName: true } },
+        },
+      },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
       _count: { select: { messages: true } },
     },
@@ -126,9 +146,26 @@ export async function getConversation(conversationId: string, userId: string) {
     where: { id: conversationId },
     include: {
       asset: { select: { id: true, slug: true, title: true, referenceCode: true, status: true } },
-      buyer: { select: { id: true, fullName: true, status: true, buyerProfile: { select: { id: true, companyName: true } } } },
-      seller: { select: { id: true, fullName: true, status: true, sellerProfile: { select: { companyName: true } } } },
-      messages: { orderBy: { createdAt: "asc" }, include: { sender: { select: { id: true, fullName: true } } } },
+      buyer: {
+        select: {
+          id: true,
+          fullName: true,
+          status: true,
+          buyerProfile: { select: { id: true, companyName: true } },
+        },
+      },
+      seller: {
+        select: {
+          id: true,
+          fullName: true,
+          status: true,
+          sellerProfile: { select: { companyName: true } },
+        },
+      },
+      messages: {
+        orderBy: { createdAt: "asc" },
+        include: { sender: { select: { id: true, fullName: true } } },
+      },
     },
   });
 

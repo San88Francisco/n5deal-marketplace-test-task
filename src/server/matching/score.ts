@@ -20,12 +20,7 @@ export type MatchableAsset = {
 };
 
 export type MatchFactorCode =
-  | "jurisdiction"
-  | "category"
-  | "businessType"
-  | "budget"
-  | "operating"
-  | "validated";
+  "jurisdiction" | "category" | "businessType" | "budget" | "operating" | "validated";
 
 export type MatchFactor = {
   code: MatchFactorCode;
@@ -81,8 +76,7 @@ export function scoreMatch(buyer: MatchableBuyer, asset: MatchableAsset): MatchR
   const businessHit = buyer.targetBusinessTypes.includes(asset.businessType);
   const noBusinessPreference = buyer.targetBusinessTypes.length === 0;
   const budgetEarned = scoreBudget(asset.askingPriceEur, buyer.ticketMinEur, buyer.ticketMaxEur);
-  const operatingOk =
-    !buyer.wantsOperatingOnly || asset.licenceStatus === LICENCE_STATUS.ACTIVE;
+  const operatingOk = !buyer.wantsOperatingOnly || asset.licenceStatus === LICENCE_STATUS.ACTIVE;
 
   const factors: MatchFactor[] = [
     {

@@ -142,7 +142,8 @@ export const BUYERS: BuyerSeed[] = [
     timeline: "EXPLORING",
     wantsOperatingOnly: false,
     proofOfFundsReady: false,
-    investmentThesis: "No fixed mandate. We look at anything with a credible path to authorisation.",
+    investmentThesis:
+      "No fixed mandate. We look at anything with a credible path to authorisation.",
     targetJurisdictions: ["ES", "PL", "CZ", "BG", "LT"],
     targetCategories: ["PI", "SPI", "SEMI"],
     targetBusinessTypes: [],

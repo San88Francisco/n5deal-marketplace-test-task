@@ -86,12 +86,15 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
       if (filters.priceMin != null) next.set("priceMin", String(filters.priceMin));
       if (filters.priceMax != null) next.set("priceMax", String(filters.priceMax));
       if (filters.validatedOnly) next.set("validatedOnly", "true");
-      if (filters.keywords) next.set("q", filters.keywords);
+
+      const hasStructuredFilters = Array.from(next.keys()).length > 0;
+
+      if (filters.keywords && !hasStructuredFilters) next.set("q", filters.keywords);
 
       setNotice({ tone: "info", text: filters.interpretation });
       startTransition(() =>
-      router.replace(ROUTES.assets.list(paramsToObject(next)), { scroll: false }),
-    );
+        router.replace(ROUTES.assets.list(paramsToObject(next)), { scroll: false }),
+      );
     } catch {
       setNotice({ tone: "error", text: SMART_SEARCH_NOTICE.failed });
       applyKeyword(query);
@@ -151,19 +154,19 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
         </label>
 
         {smart &&
-            EXAMPLES.map((example) => (
-              <button
-                key={example}
-                type="button"
-                onClick={() => {
-                  setValue(example);
-                  void applySmart(example);
-                }}
-                className="rounded-full border border-ink-200 px-2.5 py-0.5 text-[12px] text-ink-500 hover:border-navy-600 hover:text-ink-900"
-              >
-                {example}
-              </button>
-            ))}
+          EXAMPLES.map((example) => (
+            <button
+              key={example}
+              type="button"
+              onClick={() => {
+                setValue(example);
+                void applySmart(example);
+              }}
+              className="rounded-full border border-ink-200 px-2.5 py-0.5 text-[12px] text-ink-500 hover:border-navy-600 hover:text-ink-900"
+            >
+              {example}
+            </button>
+          ))}
       </div>
 
       {notice && (
@@ -174,9 +177,7 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
               : "border border-ink-200 bg-ink-50 text-ink-700"
           }`}
         >
-          {notice.tone === "info" && (
-            <Sparkles className="mr-1.5 inline h-3.5 w-3.5" aria-hidden />
-          )}
+          {notice.tone === "info" && <Sparkles className="mr-1.5 inline h-3.5 w-3.5" aria-hidden />}
           {notice.text}
         </p>
       )}

@@ -6,7 +6,7 @@ import { useActionState } from "react";
 import { FieldError } from "@/components/ui/field-error";
 import { FormAlert } from "@/components/ui/form-alert";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { SIGN_UP_ROLE_OPTIONS , SIGN_UP_FIELDS } from "@/constants";
+import { SIGN_UP_ROLE_OPTIONS, SIGN_UP_FIELDS } from "@/constants";
 import { ROUTES } from "@/routes";
 import { signUpAction } from "@/server/auth/actions";
 import type { ActionState, ContactableRole } from "@/types";

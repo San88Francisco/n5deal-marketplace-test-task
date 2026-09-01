@@ -37,6 +37,14 @@ export class AuthorizationError extends Error {
   }
 }
 
+export async function roleOrNull(...roles: UserRole[]): Promise<User | null> {
+  const state = await getAuthState();
+
+  if (state.status !== "active") return null;
+
+  return roles.includes(state.user.role) ? state.user : null;
+}
+
 export async function assertRole(...roles: UserRole[]): Promise<User> {
   const state = await getAuthState();
 
