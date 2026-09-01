@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { ControllerFieldState } from "react-hook-form";
 
-import type { HelperText } from "@/components/ui/form-primitives";
+import { HelperText } from "@/components/ui/helper-text";
 
 /**
  * One rule for what a field shows underneath itself: an error wins over a

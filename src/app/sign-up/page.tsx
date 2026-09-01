@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SignUpForm } from "@/components/auth/auth-forms";
 import { getCurrentUser } from "@/server/auth/session";
 import { landingFor } from "@/routes";
+import { USER_ROLE } from "@/constants";
 
 export const metadata: Metadata = { title: "Create an account" };
 
@@ -16,7 +17,7 @@ export default async function SignUpPage({
   if (user) redirect(landingFor(user.role));
 
   const { role } = await searchParams;
-  const defaultRole = role === "SELLER" ? "SELLER" : "BUYER";
+  const defaultRole = role === USER_ROLE.SELLER ? USER_ROLE.SELLER : USER_ROLE.BUYER;
 
   return (
     <div className="container-page flex justify-center py-14 lg:py-20">

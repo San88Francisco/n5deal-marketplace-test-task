@@ -2,22 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AssetCard } from "@/components/assets/asset-card";
+import { AssetSection } from "@/components/assets/asset-section";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MATCH_SECTIONS } from "@/constants";
 import { assetFilterSchema } from "@/lib/validation";
+import { ROUTES } from "@/routes";
 import { requireBuyer } from "@/server/auth/guards";
 import { searchAssets } from "@/server/assets/queries";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { matchBand } from "@/server/matching/score";
-import { ROUTES } from "@/routes";
+import { groupBy } from "@/utils/array";
 
 export const metadata: Metadata = { title: "Matched for you" };
 
-/**
- * The payoff for filling in a mandate: the whole marketplace, ranked, split into
- * "worth a call" and "worth a look". Weak matches are hidden rather than padded
- * in — a recommendation list that includes everything recommends nothing.
- */
 export default async function MatchesPage() {
   const user = await requireBuyer();
   const profile = await getBuyerProfile(user.id);
@@ -26,9 +24,13 @@ export default async function MatchesPage() {
   const filters = assetFilterSchema.parse({ sort: "match" });
   const { items } = await searchAssets(filters, { buyer: toMatchableBuyer(profile) });
 
-  const strong = items.filter((asset) => matchBand(asset.match?.score ?? 0) === "strong");
-  const good = items.filter((asset) => matchBand(asset.match?.score ?? 0) === "good");
-  const partial = items.filter((asset) => matchBand(asset.match?.score ?? 0) === "partial");
+  const byBand = groupBy(items, (asset) => matchBand(asset.match?.score ?? 0));
+  const sections = MATCH_SECTIONS.map((section) => ({
+    ...section,
+    assets: byBand[section.band] ?? [],
+  }));
+
+  const hasMatches = sections.some((section) => section.assets.length > 0);
 
   return (
     <div className="container-page py-10">
@@ -43,72 +45,38 @@ export default async function MatchesPage() {
             {profile.targetCategories.length} licence types, cheque size and timeline.
           </p>
         </div>
+
         <Button asChild variant="outline">
           <Link href={ROUTES.buyer.profile}>Adjust mandate</Link>
         </Button>
       </div>
 
-      {strong.length + good.length + partial.length === 0 ? (
-        <div className="card mt-8 grid place-items-center px-6 py-20 text-center">
-          <p className="text-[16px] font-medium text-ink-900">Nothing matches your mandate yet</p>
-          <p className="mt-1.5 max-w-[440px] text-[13.5px] text-ink-500">
-            Your mandate may be narrower than the current inventory. Widening the jurisdictions or
-            raising the cheque ceiling is usually the fastest fix.
-          </p>
-          <div className="mt-4 flex gap-2">
+      {hasMatches ? (
+        <div className="mt-8 space-y-10">
+          {sections.map((section) => (
+            <AssetSection
+              key={section.band}
+              title={section.title}
+              hint={section.hint}
+              assets={section.assets}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8">
+          <EmptyState
+            title="Nothing matches your mandate yet"
+            description="Your mandate may be narrower than the current inventory. Widening the jurisdictions or raising the cheque ceiling is usually the fastest fix."
+          >
             <Button asChild variant="outline">
               <Link href={ROUTES.buyer.profile}>Adjust mandate</Link>
             </Button>
             <Button asChild>
               <Link href={ROUTES.assets.index}>Browse everything</Link>
             </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-8 space-y-10">
-          <Section
-            title="Strong matches"
-            hint="These line up with your mandate on jurisdiction, licence type and budget."
-            assets={strong}
-          />
-          <Section
-            title="Worth a look"
-            hint="Close, but one axis is off — usually price or business model."
-            assets={good}
-          />
-          <Section
-            title="Partial matches"
-            hint="Included for completeness. Expect at least one significant mismatch."
-            assets={partial}
-          />
+          </EmptyState>
         </div>
       )}
     </div>
-  );
-}
-
-function Section({
-  title,
-  hint,
-  assets,
-}: {
-  title: string;
-  hint: string;
-  assets: Awaited<ReturnType<typeof searchAssets>>["items"];
-}) {
-  if (!assets.length) return null;
-
-  return (
-    <section>
-      <h2 className="text-[18px] font-semibold tracking-tight text-ink-900">
-        {title} <span className="tabular text-ink-300">({assets.length})</span>
-      </h2>
-      <p className="mt-1 text-[13.5px] text-ink-500">{hint}</p>
-      <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {assets.map((asset) => (
-          <AssetCard key={asset.id} asset={asset} />
-        ))}
-      </div>
-    </section>
   );
 }

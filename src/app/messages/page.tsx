@@ -6,11 +6,12 @@ import { formatRelative } from "@/utils/format";
 import { requireRole } from "@/server/auth/guards";
 import { listConversations } from "@/server/conversations/service";
 import { ROUTES } from "@/routes";
+import { USER_ROLE, USER_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Messages" };
 
 export default async function MessagesPage() {
-  const user = await requireRole("BUYER", "SELLER");
+  const user = await requireRole(USER_ROLE.BUYER, USER_ROLE.SELLER);
   const conversations = await listConversations(user.id);
 
   return (
@@ -25,15 +26,15 @@ export default async function MessagesPage() {
         <div className="card mt-8 grid place-items-center px-6 py-20 text-center">
           <p className="text-[16px] font-medium text-ink-900">No conversations yet</p>
           <p className="mt-1.5 max-w-[420px] text-[13.5px] text-ink-500">
-            {user.role === "BUYER"
+            {user.role === USER_ROLE.BUYER
               ? "Contact a seller from any listing and the thread will appear here."
               : "Reach out to a buyer from the directory, or wait for a buyer to contact you about a listing."}
           </p>
           <Link
-            href={user.role === "BUYER" ? "/assets" : "/sell/buyers"}
+            href={user.role === USER_ROLE.BUYER ? "/assets" : "/sell/buyers"}
             className="mt-4 text-[13.5px] font-medium text-navy-700 hover:underline"
           >
-            {user.role === "BUYER" ? "Browse listings" : "Browse buyers"}
+            {user.role === USER_ROLE.BUYER ? "Browse listings" : "Browse buyers"}
           </Link>
         </div>
       ) : (
@@ -59,7 +60,7 @@ export default async function MessagesPage() {
                       <span className="text-[14px] font-semibold text-ink-900">
                         {counterpartyName}
                       </span>
-                      {counterparty.status !== "ACTIVE" ? (
+                      {counterparty.status !== USER_STATUS.ACTIVE ? (
                         <Badge tone="caution">No longer active</Badge>
                       ) : null}
                       {unread ? <Badge tone="navy">New</Badge> : null}

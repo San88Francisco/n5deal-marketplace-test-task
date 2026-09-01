@@ -7,7 +7,7 @@ import { AssetFilters } from "@/components/assets/asset-filters";
 import { SmartSearch } from "@/components/assets/smart-search";
 import { Pagination } from "@/components/ui/pagination";
 import { SortSelect } from "@/components/ui/sort-select";
-import { ASSET_FEATURES, BUSINESS_TYPES, LICENCE_STATUSES } from "@/constants";
+import { ASSET_FEATURES, BUSINESS_TYPES, LICENCE_STATUSES, USER_ROLE } from "@/constants";
 import { assetFilterSchema } from "@/lib/validation";
 import { getActiveFacets, getTaxonomy, searchAssets } from "@/server/assets/queries";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
@@ -33,7 +33,7 @@ export default async function AssetsPage({
   const filters = parsed.success ? parsed.data : assetFilterSchema.parse({});
 
   const user = await getCurrentUser();
-  const buyerProfile = user?.role === "BUYER" ? await getBuyerProfile(user.id) : null;
+  const buyerProfile = user?.role === USER_ROLE.BUYER ? await getBuyerProfile(user.id) : null;
 
   const [{ items, total, page, pageCount }, taxonomy, facets] = await Promise.all([
     searchAssets(filters, { buyer: buyerProfile ? toMatchableBuyer(buyerProfile) : null }),
@@ -77,7 +77,7 @@ export default async function AssetsPage({
         </Suspense>
       </div>
 
-      {!buyerProfile && user?.role === "BUYER" ? (
+      {!buyerProfile && user?.role === USER_ROLE.BUYER ? (
         <div className="mt-6 rounded-card border border-accent-300/50 bg-accent-50 p-4">
           <p className="text-[14px] font-medium text-accent-700">
             Set up your mandate to see match scores
@@ -99,9 +99,6 @@ export default async function AssetsPage({
             categories={taxonomy.categories}
             jurisdictionCounts={Object.fromEntries(facets.jurisdictionCounts)}
             categoryCounts={Object.fromEntries(facets.categoryCounts)}
-            businessTypes={BUSINESS_TYPES}
-            licenceStatuses={LICENCE_STATUSES}
-            features={ASSET_FEATURES}
           />
         </Suspense>
 

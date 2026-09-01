@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { BadgeCheck, Eye, Heart, Users } from "lucide-react";
 
-import { Badge, MatchBadge } from "@/components/ui/badge";
-import { FEATURE_LABEL, LICENCE_STATUS_LABEL } from "@/constants";
+import { Badge } from "@/components/ui/badge";
+import { MatchBadge } from "@/components/ui/match-badge";
+import { ASSET_STATUS, FEATURE_LABEL, LICENCE_STATUS, LICENCE_STATUS_LABEL } from "@/constants";
 import { flagEmoji, formatMoneyShort, formatNumber, humanise } from "@/utils/format";
 import type { AssetListItem } from "@/server/assets/queries";
 import { ROUTES } from "@/routes";
@@ -14,7 +15,7 @@ import { ROUTES } from "@/routes";
  * six facts, so nothing else competes with them.
  */
 export function AssetCard({ asset }: { asset: AssetListItem }) {
-  const isSold = asset.status === "SOLD";
+  const isSold = asset.status === ASSET_STATUS.SOLD;
 
   return (
     <article
@@ -53,11 +54,11 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
       <div className="mt-3 flex flex-wrap gap-1.5">
         <Badge tone="navy">{asset.category.code}</Badge>
         <Badge tone="outline">{humanise(asset.businessType)}</Badge>
-        <Badge tone={asset.licenceStatus === "ACTIVE" ? "positive" : "neutral"}>
+        <Badge tone={asset.licenceStatus === LICENCE_STATUS.ACTIVE ? "positive" : "neutral"}>
           {LICENCE_STATUS_LABEL[asset.licenceStatus]}
         </Badge>
         {isSold ? <Badge tone="neutral">Sold</Badge> : null}
-        {asset.status === "UNDER_OFFER" ? <Badge tone="caution">Under offer</Badge> : null}
+        {asset.status === ASSET_STATUS.UNDER_OFFER ? <Badge tone="caution">Under offer</Badge> : null}
       </div>
 
       {asset.match ? (

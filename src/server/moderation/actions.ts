@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { moderationSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
 import { applyModeration } from "@/server/moderation/service";
+import { USER_ROLE } from "@/constants";
+import { ROUTES } from "@/routes";
 
 export type ModerationState = { error?: string; ok?: true };
 
@@ -24,7 +26,7 @@ export async function moderateAction(
   }
 
   try {
-    const manager = await assertRole("PLATFORM_MANAGER");
+    const manager = await assertRole(USER_ROLE.PLATFORM_MANAGER);
     await applyModeration(manager.id, parsed.data);
   } catch (error) {
     if (error instanceof AuthorizationError) return { error: error.message };
@@ -32,10 +34,10 @@ export async function moderateAction(
     return { error: error instanceof Error ? error.message : "Could not apply that action." };
   }
 
-  revalidatePath("/manage");
-  revalidatePath("/manage/participants");
-  revalidatePath("/manage/listings");
-  revalidatePath("/manage/audit");
-  revalidatePath("/assets");
+  revalidatePath(ROUTES.manage.overview);
+  revalidatePath(ROUTES.manage.participants());
+  revalidatePath(ROUTES.manage.listings());
+  revalidatePath(ROUTES.manage.audit);
+  revalidatePath(ROUTES.assets.index);
   return { ok: true };
 }

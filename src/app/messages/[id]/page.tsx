@@ -8,6 +8,7 @@ import { formatRelative } from "@/utils/format";
 import { requireRole } from "@/server/auth/guards";
 import { getConversation } from "@/server/conversations/service";
 import { ROUTES } from "@/routes";
+import { ASSET_STATUS, USER_ROLE, USER_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Conversation" };
 
@@ -17,7 +18,7 @@ export default async function ConversationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await requireRole("BUYER", "SELLER");
+  const user = await requireRole(USER_ROLE.BUYER, USER_ROLE.SELLER);
   const conversation = await getConversation(id, user.id);
 
   if (!conversation) notFound();
@@ -31,7 +32,7 @@ export default async function ConversationPage({
 
   // A thread with a suspended or removed counterparty stays readable but is
   // closed to new messages — the history is often the record of a live deal.
-  const readOnly = counterparty.status !== "ACTIVE";
+  const readOnly = counterparty.status !== USER_STATUS.ACTIVE;
 
   return (
     <div className="container-page max-w-[760px] py-10">
@@ -57,7 +58,7 @@ export default async function ConversationPage({
             >
               #{conversation.asset.referenceCode} {conversation.asset.title}
             </Link>
-            {conversation.asset.status === "SUSPENDED" ? " (listing suspended)" : ""}
+            {conversation.asset.status === ASSET_STATUS.SUSPENDED ? " (listing suspended)" : ""}
           </p>
         ) : null}
       </header>

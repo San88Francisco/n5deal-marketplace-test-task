@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db";
 import { buyerProfileSchema, sellerProfileSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
+import { USER_ROLE } from "@/constants";
+import { ROUTES } from "@/routes";
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
@@ -23,7 +25,7 @@ export async function saveBuyerProfileAction(input: unknown): Promise<SaveResult
   }
 
   try {
-    const user = await assertRole("BUYER");
+    const user = await assertRole(USER_ROLE.BUYER);
     const data = parsed.data;
 
     const profileData = {
@@ -90,9 +92,9 @@ export async function saveBuyerProfileAction(input: unknown): Promise<SaveResult
     return { ok: false, error: "Could not save your mandate. Try again." };
   }
 
-  revalidatePath("/account/buyer-profile");
-  revalidatePath("/assets");
-  revalidatePath("/sell/buyers");
+  revalidatePath(ROUTES.buyer.profile);
+  revalidatePath(ROUTES.assets.index);
+  revalidatePath(ROUTES.seller.buyers);
   return { ok: true };
 }
 
@@ -103,7 +105,7 @@ export async function saveSellerProfileAction(input: unknown): Promise<SaveResul
   }
 
   try {
-    const user = await assertRole("SELLER");
+    const user = await assertRole(USER_ROLE.SELLER);
     const data = parsed.data;
 
     const profileData = {
@@ -145,6 +147,6 @@ export async function saveSellerProfileAction(input: unknown): Promise<SaveResul
     return { ok: false, error: "Could not save your company profile. Try again." };
   }
 
-  revalidatePath("/account/seller-profile");
+  revalidatePath(ROUTES.seller.profile);
   return { ok: true };
 }

@@ -4,8 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Target } from "lucide-react";
 
-import { Select } from "@/components/ui/form-primitives";
-import { ASSET_STATUS_LABEL } from "@/constants";
+import { Select } from "@/components/ui/select";
+import { ASSET_STATUS, ASSET_STATUS_LABEL } from "@/constants";
 
 /**
  * Switches the buyer directory between "everyone" and "ranked for this
@@ -41,7 +41,7 @@ export function AssetPicker({
           ...assets.map((asset) => ({
             value: asset.id,
             label:
-              asset.status === "PUBLISHED"
+              asset.status === ASSET_STATUS.PUBLISHED
                 ? asset.title
                 : `${asset.title} — ${ASSET_STATUS_LABEL[asset.status] ?? asset.status}`,
           })),

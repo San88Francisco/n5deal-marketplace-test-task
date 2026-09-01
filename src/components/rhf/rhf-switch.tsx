@@ -11,7 +11,8 @@ import {
 } from "react-hook-form";
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
-import { HelperText, Switch } from "@/components/ui/form-primitives";
+import { HelperText } from "@/components/ui/helper-text";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/utils/cn";
 
 type RHFSwitchProps<T extends FieldValues> = {

@@ -5,6 +5,7 @@ import { countUnread } from "@/server/conversations/service";
 import { signOutAction } from "@/server/auth/actions";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/routes";
+import { USER_ROLE } from "@/constants";
 
 type NavItem = { href: string; label: string };
 
@@ -39,7 +40,7 @@ export async function SiteHeader() {
   const state = await getAuthState();
   const user = state.status === "active" ? state.user : null;
   const nav = user ? (NAV_BY_ROLE[user.role] ?? ANONYMOUS_NAV) : ANONYMOUS_NAV;
-  const unread = user && user.role !== "PLATFORM_MANAGER" ? await countUnread(user.id) : 0;
+  const unread = user && user.role !== USER_ROLE.PLATFORM_MANAGER ? await countUnread(user.id) : 0;
 
   return (
     <header className="sticky top-0 z-40 border-b border-navy-800 bg-navy-950">
@@ -74,7 +75,7 @@ export async function SiteHeader() {
               <div className="hidden text-right sm:block">
                 <p className="text-[13px] font-medium leading-tight text-white">{user.fullName}</p>
                 <p className="text-[11px] uppercase tracking-wider text-ink-300">
-                  {user.role === "PLATFORM_MANAGER" ? "Platform manager" : user.role.toLowerCase()}
+                  {user.role === USER_ROLE.PLATFORM_MANAGER ? "Platform manager" : user.role.toLowerCase()}
                 </p>
               </div>
               <form action={signOutAction}>

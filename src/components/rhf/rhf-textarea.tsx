@@ -11,7 +11,9 @@ import {
 } from "react-hook-form";
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
-import { HelperText, Label, Textarea } from "@/components/ui/form-primitives";
+import { HelperText } from "@/components/ui/helper-text";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/utils/cn";
 
 type RHFTextareaProps<T extends FieldValues> = {

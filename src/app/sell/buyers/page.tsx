@@ -8,7 +8,7 @@ import { BuyerFilters } from "@/components/buyers/buyer-filters";
 import { AssetPicker } from "@/components/buyers/asset-picker";
 import { Pagination } from "@/components/ui/pagination";
 import { SortSelect } from "@/components/ui/sort-select";
-import { BUSINESS_TYPES, INVESTOR_TYPES, TIMELINES } from "@/constants";
+import { ASSET_STATUS, BUSINESS_TYPES, INVESTOR_TYPES, TIMELINES } from "@/constants";
 import { buyerFilterSchema } from "@/lib/validation";
 import { requireSeller } from "@/server/auth/guards";
 import { getSellerAssets, getTaxonomy } from "@/server/assets/queries";
@@ -88,7 +88,7 @@ export default async function BuyerDirectoryPage({
         <Suspense fallback={<div className="h-16 rounded-card bg-ink-100" />}>
           <AssetPicker
             assets={assets
-              .filter((asset) => asset.status !== "SUSPENDED")
+              .filter((asset) => asset.status !== ASSET_STATUS.SUSPENDED)
               .map((asset) => ({ id: asset.id, title: asset.title, status: asset.status }))}
             selectedId={filters.forAssetId}
           />

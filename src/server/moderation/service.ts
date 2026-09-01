@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db";
 import { AuthorizationError } from "@/server/auth/guards";
 import type { ModerationInput, ParticipantFilters } from "@/lib/validation";
-import { ADMIN_PAGE_SIZE } from "@/constants";
+import { ADMIN_PAGE_SIZE, ASSET_STATUS, MODERATION_ACTION, USER_ROLE, USER_STATUS } from "@/constants";
 
 export const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
@@ -21,13 +21,13 @@ export const PAGE_SIZE = ADMIN_PAGE_SIZE;
  */
 export async function applyModeration(actorId: string, input: ModerationInput) {
   const actor = await prisma.user.findUnique({ where: { id: actorId } });
-  if (!actor || actor.role !== "PLATFORM_MANAGER") {
+  if (!actor || actor.role !== USER_ROLE.PLATFORM_MANAGER) {
     throw new AuthorizationError("Only platform managers can moderate");
   }
 
   const writes: Prisma.PrismaPromise<unknown>[] = [];
 
-  if (input.type.startsWith("USER_") || input.type === "SELLER_VERIFY") {
+  if (input.type.startsWith("USER_") || input.type === MODERATION_ACTION.SELLER_VERIFY) {
     if (!input.targetUserId) throw new Error("A target participant is required");
 
     const target = await prisma.user.findUnique({ where: { id: input.targetUserId } });
@@ -36,50 +36,50 @@ export async function applyModeration(actorId: string, input: ModerationInput) {
     if (target.id === actor.id) {
       throw new AuthorizationError("You cannot moderate your own account");
     }
-    if (target.role === "PLATFORM_MANAGER") {
+    if (target.role === USER_ROLE.PLATFORM_MANAGER) {
       // Managers are peers; removing one another is an admin operation, not a
       // marketplace moderation action.
       throw new AuthorizationError("Platform managers cannot moderate each other");
     }
 
     switch (input.type) {
-      case "USER_SUSPEND":
+      case MODERATION_ACTION.USER_SUSPEND:
         writes.push(
           prisma.user.update({
             where: { id: target.id },
-            data: { status: "SUSPENDED", statusReason: input.reason },
+            data: { status: USER_STATUS.SUSPENDED, statusReason: input.reason },
           }),
           prisma.session.deleteMany({ where: { userId: target.id } }),
         );
         break;
 
-      case "USER_REINSTATE":
+      case MODERATION_ACTION.USER_REINSTATE:
         writes.push(
           prisma.user.update({
             where: { id: target.id },
-            data: { status: "ACTIVE", statusReason: null },
+            data: { status: USER_STATUS.ACTIVE, statusReason: null },
           }),
         );
         break;
 
-      case "USER_REMOVE":
+      case MODERATION_ACTION.USER_REMOVE:
         writes.push(
           prisma.user.update({
             where: { id: target.id },
-            data: { status: "REMOVED", statusReason: input.reason },
+            data: { status: USER_STATUS.REMOVED, statusReason: input.reason },
           }),
           prisma.session.deleteMany({ where: { userId: target.id } }),
           // Their listings leave the marketplace with them, but are archived
           // rather than deleted so the deal history survives.
           prisma.asset.updateMany({
-            where: { sellerId: target.id, status: { notIn: ["SOLD", "ARCHIVED"] } },
-            data: { status: "ARCHIVED" },
+            where: { sellerId: target.id, status: { notIn: [ASSET_STATUS.SOLD, ASSET_STATUS.ARCHIVED] } },
+            data: { status: ASSET_STATUS.ARCHIVED },
           }),
         );
         break;
 
-      case "SELLER_VERIFY":
-        if (target.role !== "SELLER") throw new Error("Only sellers can be verified");
+      case MODERATION_ACTION.SELLER_VERIFY:
+        if (target.role !== USER_ROLE.SELLER) throw new Error("Only sellers can be verified");
         writes.push(
           prisma.sellerProfile.update({
             where: { userId: target.id },
@@ -94,15 +94,15 @@ export async function applyModeration(actorId: string, input: ModerationInput) {
     const asset = await prisma.asset.findUnique({ where: { id: input.targetAssetId } });
     if (!asset) throw new Error("Listing not found");
 
-    if (input.type === "ASSET_SUSPEND") {
+    if (input.type === MODERATION_ACTION.ASSET_SUSPEND) {
       writes.push(
-        prisma.asset.update({ where: { id: asset.id }, data: { status: "SUSPENDED" } }),
+        prisma.asset.update({ where: { id: asset.id }, data: { status: ASSET_STATUS.SUSPENDED } }),
       );
     } else {
       writes.push(
         prisma.asset.update({
           where: { id: asset.id },
-          data: { status: asset.publishedAt ? "PUBLISHED" : "DRAFT" },
+          data: { status: asset.publishedAt ? ASSET_STATUS.PUBLISHED : ASSET_STATUS.DRAFT },
         }),
       );
     }
@@ -219,12 +219,12 @@ export async function getModerationHistory(params: { userId?: string; assetId?: 
 
 export async function getPlatformStats() {
   const [buyers, sellers, published, suspended, conversations, unvalidated] = await Promise.all([
-    prisma.user.count({ where: { role: "BUYER", status: "ACTIVE" } }),
-    prisma.user.count({ where: { role: "SELLER", status: "ACTIVE" } }),
-    prisma.asset.count({ where: { status: { in: ["PUBLISHED", "UNDER_OFFER"] } } }),
-    prisma.user.count({ where: { status: { in: ["SUSPENDED", "REMOVED"] } } }),
+    prisma.user.count({ where: { role: USER_ROLE.BUYER, status: USER_STATUS.ACTIVE } }),
+    prisma.user.count({ where: { role: USER_ROLE.SELLER, status: USER_STATUS.ACTIVE } }),
+    prisma.asset.count({ where: { status: { in: [ASSET_STATUS.PUBLISHED, ASSET_STATUS.UNDER_OFFER] } } }),
+    prisma.user.count({ where: { status: { in: [USER_STATUS.SUSPENDED, USER_STATUS.REMOVED] } } }),
     prisma.conversation.count(),
-    prisma.asset.count({ where: { status: "PUBLISHED", isValidated: false } }),
+    prisma.asset.count({ where: { status: ASSET_STATUS.PUBLISHED, isValidated: false } }),
   ]);
 
   return { buyers, sellers, published, suspended, conversations, unvalidated };

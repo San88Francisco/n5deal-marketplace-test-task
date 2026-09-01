@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { UserStatusBadge } from "@/components/ui/badge";
+import { UserStatusBadge } from "@/components/ui/user-status-badge";
 import { ModerationDialog } from "@/components/manage/moderation-dialog";
 import { ManageFilters } from "@/components/manage/manage-filters";
 import { Pagination } from "@/components/ui/pagination";
@@ -8,6 +8,7 @@ import { formatDate, formatMoneyShort, humanise } from "@/utils/format";
 import { participantFilterSchema } from "@/lib/validation";
 import { requireManager } from "@/server/auth/guards";
 import { searchParticipants } from "@/server/moderation/service";
+import { MODERATION_ACTION, USER_ROLE, USER_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Participants" };
 
@@ -57,9 +58,9 @@ export default async function ParticipantsPage({
               label: "Status",
               options: [
                 { value: "", label: "All statuses" },
-                { value: "ACTIVE", label: "Active" },
-                { value: "SUSPENDED", label: "Suspended" },
-                { value: "REMOVED", label: "Removed" },
+                { value: USER_STATUS.ACTIVE, label: "Active" },
+                { value: USER_STATUS.SUSPENDED, label: "Suspended" },
+                { value: USER_STATUS.REMOVED, label: "Removed" },
               ],
             },
           ]}
@@ -85,7 +86,7 @@ export default async function ParticipantsPage({
                 participant.sellerProfile?.companyName ??
                 "—";
               const isSelf = participant.id === manager.id;
-              const isManager = participant.role === "PLATFORM_MANAGER";
+              const isManager = participant.role === USER_ROLE.PLATFORM_MANAGER;
 
               return (
                 <tr key={participant.id} className="border-b border-ink-100 last:border-0">
@@ -138,11 +139,11 @@ export default async function ParticipantsPage({
                       </span>
                     ) : (
                       <div className="flex flex-wrap justify-end gap-2">
-                        {participant.status === "ACTIVE" ? (
+                        {participant.status === USER_STATUS.ACTIVE ? (
                           <>
                             {participant.sellerProfile && !participant.sellerProfile.isVerified ? (
                               <ModerationDialog
-                                type="SELLER_VERIFY"
+                                type={MODERATION_ACTION.SELLER_VERIFY}
                                 targetUserId={participant.id}
                                 targetName={participant.fullName}
                                 triggerLabel="Verify"
@@ -150,7 +151,7 @@ export default async function ParticipantsPage({
                               />
                             ) : null}
                             <ModerationDialog
-                              type="USER_SUSPEND"
+                              type={MODERATION_ACTION.USER_SUSPEND}
                               targetUserId={participant.id}
                               targetName={`${participant.fullName} · ${participant.email}`}
                               triggerLabel="Suspend"
@@ -158,16 +159,16 @@ export default async function ParticipantsPage({
                           </>
                         ) : null}
 
-                        {participant.status === "SUSPENDED" ? (
+                        {participant.status === USER_STATUS.SUSPENDED ? (
                           <>
                             <ModerationDialog
-                              type="USER_REINSTATE"
+                              type={MODERATION_ACTION.USER_REINSTATE}
                               targetUserId={participant.id}
                               targetName={`${participant.fullName} · ${participant.email}`}
                               triggerLabel="Reinstate"
                             />
                             <ModerationDialog
-                              type="USER_REMOVE"
+                              type={MODERATION_ACTION.USER_REMOVE}
                               targetUserId={participant.id}
                               targetName={`${participant.fullName} · ${participant.email}`}
                               triggerLabel="Remove"
@@ -176,7 +177,7 @@ export default async function ParticipantsPage({
                           </>
                         ) : null}
 
-                        {participant.status === "REMOVED" ? (
+                        {participant.status === USER_STATUS.REMOVED ? (
                           <span className="text-[12.5px] text-ink-300">Removed</span>
                         ) : null}
                       </div>

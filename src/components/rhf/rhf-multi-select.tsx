@@ -11,7 +11,10 @@ import {
 } from "react-hook-form";
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
-import { HelperText, Label, MultiSelect, type SelectOption } from "@/components/ui/form-primitives";
+import { HelperText } from "@/components/ui/helper-text";
+import { Label } from "@/components/ui/label";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { type SelectOption } from "@/types";
 import { cn } from "@/utils/cn";
 
 type RHFMultiSelectProps<T extends FieldValues> = {

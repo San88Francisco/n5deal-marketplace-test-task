@@ -24,3 +24,21 @@ export const DEMO_PASSWORD = "n5deal-demo-2026";
 export const DEFAULT_CURRENCY = "EUR";
 
 export const DEFAULT_LOCALE = "en-GB";
+
+export const MATCH_SECTIONS = [
+  {
+    band: "strong",
+    title: "Strong matches",
+    hint: "These line up with your mandate on jurisdiction, licence type and budget.",
+  },
+  {
+    band: "good",
+    title: "Worth a look",
+    hint: "Close, but one axis is off — usually price or business model.",
+  },
+  {
+    band: "partial",
+    title: "Partial matches",
+    hint: "Included for completeness. Expect at least one significant mismatch.",
+  },
+] as const;

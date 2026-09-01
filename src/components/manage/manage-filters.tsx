@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Search } from "lucide-react";
 
-import { Select } from "@/components/ui/form-primitives";
+import { Select } from "@/components/ui/select";
 
 /**
  * Shared search + dropdown row for the manager tables. Same URL-as-state rule

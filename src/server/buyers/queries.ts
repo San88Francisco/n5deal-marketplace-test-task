@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db";
 import type { BuyerFilters } from "@/lib/validation";
 import { scoreMatch, type MatchableAsset, type MatchResult } from "@/server/matching/score";
-import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT } from "@/constants";
+import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT, USER_STATUS } from "@/constants";
 import type { Paginated } from "@/types";
 
 export const PAGE_SIZE = CATALOGUE_PAGE_SIZE;
@@ -25,7 +25,7 @@ export type BuyerListItem = Prisma.BuyerProfileGetPayload<{ include: typeof buye
  *  account is in good standing. */
 const PUBLIC_BUYER_WHERE: Prisma.BuyerProfileWhereInput = {
   isPublished: true,
-  user: { status: "ACTIVE" },
+  user: { status: USER_STATUS.ACTIVE },
 };
 
 export function buildBuyerWhere(filters: BuyerFilters): Prisma.BuyerProfileWhereInput {

@@ -1,5 +1,6 @@
 import type {
   ASSET_FEATURES,
+  MATCH_BANDS,
   ASSET_STATUSES,
   BUSINESS_TYPES,
   INVESTOR_TYPES,
@@ -25,6 +26,7 @@ export type BusinessType = (typeof BUSINESS_TYPES)[number];
 export type LicenceStatus = (typeof LICENCE_STATUSES)[number];
 export type AssetStatus = (typeof ASSET_STATUSES)[number];
 export type AssetFeatureCode = (typeof ASSET_FEATURES)[number];
+export type MatchBand = (typeof MATCH_BANDS)[number];
 
 /** What every Server Action returns to a form. */
 export type ActionState = {
@@ -63,3 +65,17 @@ export type CategoryOption = {
   code: string;
   name: string;
 };
+
+export type FilterOption = {
+  value: string;
+  label: string;
+  count?: number;
+};
+
+export type FilterGroupConfig = {
+  key: string;
+  title: string;
+  options: FilterOption[];
+};
+
+export type ContactableRole = Extract<UserRole, "BUYER" | "SELLER">;

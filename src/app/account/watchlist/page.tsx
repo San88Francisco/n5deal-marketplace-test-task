@@ -8,6 +8,7 @@ import { prisma } from "@/server/db";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { scoreMatch } from "@/server/matching/score";
 import { ROUTES } from "@/routes";
+import { ASSET_STATUS, USER_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Watchlist" };
 
@@ -39,7 +40,7 @@ export default async function WatchlistPage() {
   const items = favourites.map((favourite) => ({
     ...favourite.asset,
     unavailable:
-      favourite.asset.seller.status !== "ACTIVE" || favourite.asset.status === "SUSPENDED",
+      favourite.asset.seller.status !== USER_STATUS.ACTIVE || favourite.asset.status === ASSET_STATUS.SUSPENDED,
     match: buyer
       ? scoreMatch(buyer, {
           jurisdictionCode: favourite.asset.jurisdictionCode,

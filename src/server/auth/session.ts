@@ -7,7 +7,7 @@ import type { User } from "@prisma/client";
 
 import { prisma } from "@/server/db";
 import { SESSION_COOKIE } from "@/server/auth/constants";
-import { BCRYPT_ROUNDS, SESSION_TTL_DAYS } from "@/constants";
+import { BCRYPT_ROUNDS, SESSION_TTL_DAYS, USER_STATUS } from "@/constants";
 
 export { SESSION_COOKIE };
 
@@ -100,13 +100,13 @@ export async function getAuthState(): Promise<AuthState> {
     return { status: "anonymous" };
   }
 
-  if (session.user.status === "REMOVED") {
+  if (session.user.status === USER_STATUS.REMOVED) {
     // Terminal: the account is gone, so every session it holds goes with it.
     await prisma.session.deleteMany({ where: { userId: session.userId } });
     return { status: "anonymous" };
   }
 
-  if (session.user.status === "SUSPENDED") {
+  if (session.user.status === USER_STATUS.SUSPENDED) {
     return { status: "suspended", user: session.user };
   }
 

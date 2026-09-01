@@ -7,6 +7,7 @@ import { prisma } from "@/server/db";
 import { signInSchema, signUpSchema } from "@/lib/validation";
 import { createSession, destroySession, hashPassword, verifyPassword } from "@/server/auth/session";
 import { landingFor, ROUTES } from "@/routes";
+import { USER_ROLE, USER_STATUS } from "@/constants";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string[]> };
 
@@ -35,12 +36,12 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   const valid = await verifyPassword(parsed.data.password, user.passwordHash);
   if (!valid) return { error: "Those credentials do not match an account." };
 
-  if (user.status === "SUSPENDED") {
+  if (user.status === USER_STATUS.SUSPENDED) {
     return {
       error: `Your account is suspended. ${user.statusReason ?? "Contact the platform team."}`,
     };
   }
-  if (user.status === "REMOVED") {
+  if (user.status === USER_STATUS.REMOVED) {
     return { error: "This account has been removed from the platform." };
   }
 
@@ -81,7 +82,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
 
   // New accounts land on profile setup, not the marketplace: an empty profile
   // is useless to the other side, and asking for it later never works.
-  redirect(parsed.data.role === "BUYER" ? "/account/buyer-profile" : "/account/seller-profile");
+  redirect(parsed.data.role === USER_ROLE.BUYER ? "/account/buyer-profile" : "/account/seller-profile");
 }
 
 export async function signOutAction() {

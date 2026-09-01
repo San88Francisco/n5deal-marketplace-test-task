@@ -11,7 +11,8 @@ import {
 } from "react-hook-form";
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
-import { Checkbox, HelperText } from "@/components/ui/form-primitives";
+import { Checkbox } from "@/components/ui/checkbox";
+import { HelperText } from "@/components/ui/helper-text";
 import { cn } from "@/utils/cn";
 
 type RHFCheckboxProps<T extends FieldValues> = {

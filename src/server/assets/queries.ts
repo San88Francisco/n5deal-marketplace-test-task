@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db";
 import type { AssetFilters } from "@/lib/validation";
 import { scoreMatch, type MatchableBuyer, type MatchResult } from "@/server/matching/score";
-import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT, PUBLIC_ASSET_STATUSES } from "@/constants";
+import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT, PUBLIC_ASSET_STATUSES, USER_STATUS } from "@/constants";
 import type { Paginated } from "@/types";
 
 export const PAGE_SIZE = CATALOGUE_PAGE_SIZE;
@@ -26,7 +26,7 @@ const PUBLIC_STATUSES: Prisma.EnumAssetStatusFilter = {
  */
 const PUBLIC_ASSET_WHERE: Prisma.AssetWhereInput = {
   status: PUBLIC_STATUSES,
-  seller: { status: "ACTIVE" },
+  seller: { status: USER_STATUS.ACTIVE },
 };
 
 export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { z } from "zod";
 
-import { AssetStatusBadge, Badge } from "@/components/ui/badge";
+import { AssetStatusBadge } from "@/components/ui/asset-status-badge";
+import { Badge } from "@/components/ui/badge";
 import { ModerationDialog } from "@/components/manage/moderation-dialog";
 import { ManageFilters } from "@/components/manage/manage-filters";
 import { Pagination } from "@/components/ui/pagination";
@@ -10,13 +11,14 @@ import { flagEmoji, formatDate, formatMoneyShort } from "@/utils/format";
 import { requireManager } from "@/server/auth/guards";
 import { searchAllAssets } from "@/server/moderation/service";
 import { ROUTES } from "@/routes";
+import { ASSET_STATUS, MODERATION_ACTION, USER_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Listings" };
 
 const filterSchema = z.object({
   q: z.string().trim().max(200).optional(),
   status: z
-    .enum(["DRAFT", "PUBLISHED", "UNDER_OFFER", "SOLD", "SUSPENDED", "ARCHIVED"])
+    .enum([ASSET_STATUS.DRAFT, ASSET_STATUS.PUBLISHED, ASSET_STATUS.UNDER_OFFER, ASSET_STATUS.SOLD, USER_STATUS.SUSPENDED, ASSET_STATUS.ARCHIVED])
     .optional(),
   page: z.coerce.number().int().min(1).default(1),
 });
@@ -57,12 +59,12 @@ export default async function ManageListingsPage({
               label: "Status",
               options: [
                 { value: "", label: "All statuses" },
-                { value: "PUBLISHED", label: "Published" },
-                { value: "UNDER_OFFER", label: "Under offer" },
-                { value: "DRAFT", label: "Draft" },
-                { value: "SOLD", label: "Sold" },
-                { value: "SUSPENDED", label: "Suspended" },
-                { value: "ARCHIVED", label: "Archived" },
+                { value: ASSET_STATUS.PUBLISHED, label: "Published" },
+                { value: ASSET_STATUS.UNDER_OFFER, label: "Under offer" },
+                { value: ASSET_STATUS.DRAFT, label: "Draft" },
+                { value: ASSET_STATUS.SOLD, label: "Sold" },
+                { value: USER_STATUS.SUSPENDED, label: "Suspended" },
+                { value: ASSET_STATUS.ARCHIVED, label: "Archived" },
               ],
             },
           ]}
@@ -100,7 +102,7 @@ export default async function ManageListingsPage({
                   <p className="text-[13.5px] text-ink-900">
                     {asset.seller.sellerProfile?.companyName ?? asset.seller.fullName}
                   </p>
-                  {asset.seller.status !== "ACTIVE" ? (
+                  {asset.seller.status !== USER_STATUS.ACTIVE ? (
                     <Badge tone="caution" className="mt-1">
                       Seller {asset.seller.status.toLowerCase()}
                     </Badge>
@@ -118,16 +120,16 @@ export default async function ManageListingsPage({
                 <td className="px-5 py-4 text-[13px] text-ink-500">{formatDate(asset.updatedAt)}</td>
                 <td className="px-5 py-4">
                   <div className="flex justify-end">
-                    {asset.status === "SUSPENDED" ? (
+                    {asset.status === ASSET_STATUS.SUSPENDED ? (
                       <ModerationDialog
-                        type="ASSET_REINSTATE"
+                        type={MODERATION_ACTION.ASSET_REINSTATE}
                         targetAssetId={asset.id}
                         targetName={asset.title}
                         triggerLabel="Reinstate"
                       />
                     ) : (
                       <ModerationDialog
-                        type="ASSET_SUSPEND"
+                        type={MODERATION_ACTION.ASSET_SUSPEND}
                         targetAssetId={asset.id}
                         targetName={asset.title}
                         triggerLabel="Suspend"

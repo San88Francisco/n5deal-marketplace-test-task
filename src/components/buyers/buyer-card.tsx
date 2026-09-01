@@ -1,6 +1,7 @@
 import { Building2, ShieldCheck } from "lucide-react";
 
-import { Badge, MatchBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { MatchBadge } from "@/components/ui/match-badge";
 import { ContactDialog } from "@/components/messages/contact-dialog";
 import { TIMELINE_LABEL } from "@/constants";
 import { flagEmoji, formatMoneyShort, humanise } from "@/utils/format";

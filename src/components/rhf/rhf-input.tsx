@@ -11,7 +11,9 @@ import {
 } from "react-hook-form";
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
-import { HelperText, Input, Label } from "@/components/ui/form-primitives";
+import { HelperText } from "@/components/ui/helper-text";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/utils/cn";
 
 type RHFInputProps<T extends FieldValues> = {

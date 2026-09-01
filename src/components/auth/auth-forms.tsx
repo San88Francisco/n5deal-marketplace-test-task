@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { signInAction, signUpAction, type ActionState } from "@/server/auth/actions";
 import { ROUTES } from "@/routes";
+import { USER_ROLE } from "@/constants";
+import type { ContactableRole } from "@/types";
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
@@ -68,7 +70,7 @@ export function SignInForm() {
   );
 }
 
-export function SignUpForm({ defaultRole }: { defaultRole?: "BUYER" | "SELLER" }) {
+export function SignUpForm({ defaultRole }: { defaultRole?: ContactableRole }) {
   const [state, action] = useActionState<ActionState, FormData>(signUpAction, {});
 
   return (
@@ -96,7 +98,7 @@ export function SignUpForm({ defaultRole }: { defaultRole?: "BUYER" | "SELLER" }
                 type="radio"
                 name="role"
                 value={option.value}
-                defaultChecked={(defaultRole ?? "BUYER") === option.value}
+                defaultChecked={(defaultRole ?? USER_ROLE.BUYER) === option.value}
                 className="sr-only"
               />
               <span className="block text-[14px] font-medium text-ink-900">{option.title}</span>

@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BadgeCheck, Building2, Heart } from "lucide-react";
 
-import { Badge, MatchBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { MatchBadge } from "@/components/ui/match-badge";
 import { Button } from "@/components/ui/button";
 import { ContactDialog } from "@/components/messages/contact-dialog";
 import { MatchExplainer } from "@/components/assets/match-explainer";
-import { FEATURE_LABEL, LICENCE_STATUS_LABEL } from "@/constants";
+import { ASSET_STATUS, FEATURE_LABEL, LICENCE_STATUS, LICENCE_STATUS_LABEL, USER_ROLE, USER_STATUS } from "@/constants";
 import { flagEmoji, formatDate, formatMoneyFull, formatNumber, humanise } from "@/utils/format";
 import { prisma } from "@/server/db";
 import { getAssetBySlug, recordAssetView } from "@/server/assets/queries";
@@ -39,10 +40,10 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
   // A suspended listing, or one whose seller is suspended, is invisible to
   // everyone except its owner and a platform manager.
   const publiclyVisible =
-    asset.status !== "SUSPENDED" && asset.status !== "DRAFT" && asset.seller.status === "ACTIVE";
-  if (!publiclyVisible && !isOwner && user?.role !== "PLATFORM_MANAGER") notFound();
+    asset.status !== ASSET_STATUS.SUSPENDED && asset.status !== ASSET_STATUS.DRAFT && asset.seller.status === USER_STATUS.ACTIVE;
+  if (!publiclyVisible && !isOwner && user?.role !== USER_ROLE.PLATFORM_MANAGER) notFound();
 
-  const buyerProfile = user?.role === "BUYER" ? await getBuyerProfile(user.id) : null;
+  const buyerProfile = user?.role === USER_ROLE.BUYER ? await getBuyerProfile(user.id) : null;
   const match = buyerProfile
     ? scoreMatch(toMatchableBuyer(buyerProfile), {
         jurisdictionCode: asset.jurisdictionCode,
@@ -62,7 +63,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
 
   // Owners and managers looking at their own listing should not inflate its
   // view count.
-  if (!isOwner && user?.role !== "PLATFORM_MANAGER") await recordAssetView(asset.id);
+  if (!isOwner && user?.role !== USER_ROLE.PLATFORM_MANAGER) await recordAssetView(asset.id);
 
   const facts = [
     { label: "Jurisdiction", value: `${flagEmoji(asset.jurisdictionCode)} ${asset.jurisdiction.name}` },
@@ -91,7 +92,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
 
       {!publiclyVisible ? (
         <p className="mt-4 rounded-md border border-caution-500/30 bg-caution-50 px-4 py-3 text-[13.5px] text-caution-700">
-          {asset.status === "DRAFT"
+          {asset.status === ASSET_STATUS.DRAFT
             ? "This listing is a draft. Only you can see it until you publish."
             : "This listing is not visible on the marketplace."}
         </p>
@@ -105,7 +106,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
             </span>
             <Badge tone="navy">{asset.category.code}</Badge>
             <Badge tone="outline">{humanise(asset.businessType)}</Badge>
-            <Badge tone={asset.licenceStatus === "ACTIVE" ? "positive" : "neutral"}>
+            <Badge tone={asset.licenceStatus === LICENCE_STATUS.ACTIVE ? "positive" : "neutral"}>
               {LICENCE_STATUS_LABEL[asset.licenceStatus]}
             </Badge>
             {asset.isValidated ? (
@@ -114,8 +115,8 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
                 Validated
               </Badge>
             ) : null}
-            {asset.status === "UNDER_OFFER" ? <Badge tone="caution">Under offer</Badge> : null}
-            {asset.status === "SOLD" ? <Badge tone="neutral">Sold</Badge> : null}
+            {asset.status === ASSET_STATUS.UNDER_OFFER ? <Badge tone="caution">Under offer</Badge> : null}
+            {asset.status === ASSET_STATUS.SOLD ? <Badge tone="neutral">Sold</Badge> : null}
           </div>
 
           <h1 className="mt-3 text-[30px] font-semibold leading-tight tracking-tight text-ink-900">
@@ -214,7 +215,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
             ) : null}
 
             <div className="mt-6 space-y-2">
-              {user?.role === "BUYER" && asset.seller.status === "ACTIVE" && publiclyVisible ? (
+              {user?.role === USER_ROLE.BUYER && asset.seller.status === USER_STATUS.ACTIVE && publiclyVisible ? (
                 <ContactDialog
                   counterpartyId={asset.sellerId}
                   counterpartyName={asset.seller.sellerProfile?.companyName ?? asset.seller.fullName}
@@ -224,7 +225,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
                 />
               ) : null}
 
-              {user?.role === "BUYER" ? (
+              {user?.role === USER_ROLE.BUYER ? (
                 <form action={toggleFavouriteAction}>
                   <input type="hidden" name="assetId" value={asset.id} />
                   <Button type="submit" variant="outline" className="w-full">
@@ -278,7 +279,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
               </p>
             ) : null}
 
-            {asset.seller.status !== "ACTIVE" ? (
+            {asset.seller.status !== USER_STATUS.ACTIVE ? (
               <p className="mt-3 rounded-md bg-caution-50 px-3 py-2 text-[12.5px] text-caution-700">
                 This seller is currently under review by the platform team.
               </p>

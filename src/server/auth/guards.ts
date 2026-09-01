@@ -5,6 +5,7 @@ import type { User, UserRole } from "@prisma/client";
 
 import { getAuthState } from "@/server/auth/session";
 import { ROUTES } from "@/routes";
+import { USER_ROLE } from "@/constants";
 
 /**
  * Authorisation lives here — next to the data, not in middleware.
@@ -36,9 +37,9 @@ export async function requireRole(...roles: UserRole[]): Promise<User> {
   return user;
 }
 
-export const requireBuyer = () => requireRole("BUYER");
-export const requireSeller = () => requireRole("SELLER");
-export const requireManager = () => requireRole("PLATFORM_MANAGER");
+export const requireBuyer = () => requireRole(USER_ROLE.BUYER);
+export const requireSeller = () => requireRole(USER_ROLE.SELLER);
+export const requireManager = () => requireRole(USER_ROLE.PLATFORM_MANAGER);
 
 /** For Server Actions and Route Handlers, where redirecting is wrong. */
 export class AuthorizationError extends Error {

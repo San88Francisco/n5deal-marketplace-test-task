@@ -2,6 +2,8 @@ import "server-only";
 
 import { prisma } from "@/server/db";
 import { AuthorizationError } from "@/server/auth/guards";
+import { ASSET_STATUS, USER_ROLE, USER_STATUS } from "@/constants";
+import type { ContactableRole } from "@/types";
 
 /**
  * Contact between the two sides.
@@ -14,26 +16,26 @@ import { AuthorizationError } from "@/server/auth/guards";
 
 export async function startConversation(params: {
   actorId: string;
-  actorRole: "BUYER" | "SELLER";
+  actorRole: ContactableRole;
   counterpartyId: string;
   assetId?: string | null;
   subject: string;
   body: string;
 }) {
-  const buyerId = params.actorRole === "BUYER" ? params.actorId : params.counterpartyId;
-  const sellerId = params.actorRole === "SELLER" ? params.actorId : params.counterpartyId;
+  const buyerId = params.actorRole === USER_ROLE.BUYER ? params.actorId : params.counterpartyId;
+  const sellerId = params.actorRole === USER_ROLE.SELLER ? params.actorId : params.counterpartyId;
 
   const [buyer, seller] = await Promise.all([
     prisma.user.findUnique({ where: { id: buyerId }, select: { id: true, role: true, status: true } }),
     prisma.user.findUnique({ where: { id: sellerId }, select: { id: true, role: true, status: true } }),
   ]);
 
-  if (!buyer || buyer.role !== "BUYER") throw new AuthorizationError("Buyer not found");
-  if (!seller || seller.role !== "SELLER") throw new AuthorizationError("Seller not found");
+  if (!buyer || buyer.role !== USER_ROLE.BUYER) throw new AuthorizationError("Buyer not found");
+  if (!seller || seller.role !== USER_ROLE.SELLER) throw new AuthorizationError("Seller not found");
 
   // You cannot open a thread with someone who is suspended or removed. Existing
   // threads survive (see getConversation) but new contact is blocked.
-  if (buyer.status !== "ACTIVE" || seller.status !== "ACTIVE") {
+  if (buyer.status !== USER_STATUS.ACTIVE || seller.status !== USER_STATUS.ACTIVE) {
     throw new AuthorizationError("That participant is not available");
   }
 
@@ -46,7 +48,7 @@ export async function startConversation(params: {
 
     // Silently drop a stale or foreign asset reference rather than failing the
     // whole message — the conversation itself is still valid.
-    if (!asset || asset.sellerId !== sellerId || asset.status === "SUSPENDED") {
+    if (!asset || asset.sellerId !== sellerId || asset.status === ASSET_STATUS.SUSPENDED) {
       assetId = null;
     }
   }
@@ -105,7 +107,7 @@ export async function replyToConversation(params: {
   // history stays visible; sending into the void does not.
   const counterparty =
     conversation.buyerId === params.actorId ? conversation.seller : conversation.buyer;
-  if (counterparty.status !== "ACTIVE") {
+  if (counterparty.status !== USER_STATUS.ACTIVE) {
     throw new AuthorizationError("This conversation is read-only");
   }
 

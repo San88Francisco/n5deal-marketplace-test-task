@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eye, Heart, MessageSquare, Plus } from "lucide-react";
 
-import { AssetStatusBadge } from "@/components/ui/badge";
+import { AssetStatusBadge } from "@/components/ui/asset-status-badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusMenu } from "@/components/assets/listing-status-menu";
 import { flagEmoji, formatDate, formatMoneyShort, formatNumber } from "@/utils/format";
@@ -11,6 +11,8 @@ import { requireSeller } from "@/server/auth/guards";
 import { getSellerAssets } from "@/server/assets/queries";
 import { getSellerProfile } from "@/server/buyers/queries";
 import { ROUTES } from "@/routes";
+import { ASSET_STATUS } from "@/constants";
+import { isLiveAssetStatus } from "@/utils/domain";
 
 export const metadata: Metadata = { title: "My listings" };
 
@@ -24,8 +26,8 @@ export default async function SellerListingsPage() {
 
   const assets = await getSellerAssets(user.id);
 
-  const live = assets.filter((asset) => ["PUBLISHED", "UNDER_OFFER"].includes(asset.status));
-  const drafts = assets.filter((asset) => asset.status === "DRAFT");
+  const live = assets.filter((asset) => isLiveAssetStatus(asset.status));
+  const drafts = assets.filter((asset) => asset.status === ASSET_STATUS.DRAFT);
 
   return (
     <div className="container-page py-10">
@@ -112,7 +114,7 @@ export default async function SellerListingsPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {asset.status === "SUSPENDED" ? (
+                      {asset.status === ASSET_STATUS.SUSPENDED ? (
                         <span className="text-[12.5px] text-critical-500">Under review</span>
                       ) : (
                         <>

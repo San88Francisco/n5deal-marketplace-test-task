@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-import {
-  ASSET_FEATURES,
-  BUSINESS_TYPES,
-  INVESTOR_TYPES,
-  LICENCE_STATUSES,
-  SELLER_TYPES,
-  TIMELINES,
-} from "@/constants";
+import { ASSET_FEATURES, BUSINESS_TYPES, INVESTOR_TYPES, LICENCE_STATUSES, MODERATION_ACTION, SELLER_TYPES, TIMELINES, USER_ROLE, USER_STATUS } from "@/constants";
 
 /**
  * One schema per concept, shared by the form (react-hook-form resolver), the
@@ -30,7 +23,7 @@ export const signUpSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
   password,
   // Managers are seeded, never self-registered.
-  role: z.enum(["BUYER", "SELLER"]),
+  role: z.enum([USER_ROLE.BUYER, USER_ROLE.SELLER]),
 });
 
 export const signInSchema = z.object({
@@ -176,8 +169,8 @@ export const buyerFilterSchema = z.object({
 
 export const participantFilterSchema = z.object({
   q: z.string().trim().max(200).optional(),
-  role: z.enum(["BUYER", "SELLER", "PLATFORM_MANAGER"]).optional(),
-  status: z.enum(["ACTIVE", "SUSPENDED", "REMOVED"]).optional(),
+  role: z.enum([USER_ROLE.BUYER, USER_ROLE.SELLER, USER_ROLE.PLATFORM_MANAGER]).optional(),
+  status: z.enum([USER_STATUS.ACTIVE, USER_STATUS.SUSPENDED, USER_STATUS.REMOVED]).optional(),
   page: z.coerce.number().int().min(1).default(1),
 });
 
@@ -199,12 +192,12 @@ export const replySchema = z.object({
 
 export const moderationSchema = z.object({
   type: z.enum([
-    "USER_SUSPEND",
-    "USER_REINSTATE",
-    "USER_REMOVE",
-    "ASSET_SUSPEND",
-    "ASSET_REINSTATE",
-    "SELLER_VERIFY",
+    MODERATION_ACTION.USER_SUSPEND,
+    MODERATION_ACTION.USER_REINSTATE,
+    MODERATION_ACTION.USER_REMOVE,
+    MODERATION_ACTION.ASSET_SUSPEND,
+    MODERATION_ACTION.ASSET_REINSTATE,
+    MODERATION_ACTION.SELLER_VERIFY,
   ]),
   targetUserId: z.string().trim().max(40).optional(),
   targetAssetId: z.string().trim().max(40).optional(),

@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AssetForm } from "@/components/assets/asset-form";
-import { AssetStatusBadge } from "@/components/ui/badge";
+import { AssetStatusBadge } from "@/components/ui/asset-status-badge";
 import { requireSeller } from "@/server/auth/guards";
 import { getTaxonomy } from "@/server/assets/queries";
 import { prisma } from "@/server/db";
 import { ROUTES } from "@/routes";
+import { ASSET_STATUS } from "@/constants";
 
 export const metadata: Metadata = { title: "Edit listing" };
 
@@ -28,7 +29,7 @@ export default async function EditListingPage({
   // not learn that it exists.
   if (!asset || asset.sellerId !== user.id) notFound();
 
-  const isPublished = asset.status !== "DRAFT";
+  const isPublished = asset.status !== ASSET_STATUS.DRAFT;
 
   return (
     <div className="container-page max-w-[860px] py-10">
@@ -42,7 +43,7 @@ export default async function EditListingPage({
         <span className="tabular text-[13px] text-ink-500">#{asset.referenceCode}</span>
       </div>
 
-      {asset.status === "SUSPENDED" ? (
+      {asset.status === ASSET_STATUS.SUSPENDED ? (
         <p className="mt-4 rounded-md border border-critical-500/25 bg-critical-50 px-4 py-3 text-[13.5px] text-critical-700">
           This listing was suspended by a platform manager and cannot be edited back into
           visibility. Contact the platform team to resolve it.

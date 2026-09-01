@@ -15,7 +15,7 @@ import {
   RHFSwitch,
   RHFTextarea,
 } from "@/components/rhf";
-import { FEATURE_LABEL, LICENCE_STATUS_LABEL } from "@/constants";
+import { FEATURE_LABEL, LICENCE_STATUS, LICENCE_STATUS_LABEL } from "@/constants";
 import { humanise } from "@/utils/format";
 import { ASSET_FEATURES, BUSINESS_TYPES, LICENCE_STATUSES } from "@/constants";
 import { assetSchema, type AssetInput } from "@/lib/validation";
@@ -82,7 +82,7 @@ export function AssetForm({
       askingPriceEur: null,
       revenueEur: null,
       ebitdaEur: null,
-      licenceStatus: "ACTIVE",
+      licenceStatus: LICENCE_STATUS.ACTIVE,
       regulator: "",
       licenceIssuedYear: null,
       yearEstablished: null,

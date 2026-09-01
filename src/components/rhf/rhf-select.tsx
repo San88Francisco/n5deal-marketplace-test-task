@@ -11,7 +11,10 @@ import {
 } from "react-hook-form";
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
-import { HelperText, Label, Select, type SelectOption } from "@/components/ui/form-primitives";
+import { HelperText } from "@/components/ui/helper-text";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { type SelectOption } from "@/types";
 import { cn } from "@/utils/cn";
 
 type RHFSelectProps<T extends FieldValues> = {

@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db";
 import { assetSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
-import { SELLER_MANAGED_STATUSES } from "@/constants";
+import { ASSET_STATUS, SELLER_MANAGED_STATUSES, USER_ROLE, USER_STATUS } from "@/constants";
+import { ROUTES } from "@/routes";
 
 export type AssetFormState = { error?: string; fieldErrors?: Record<string, string[]> };
 
@@ -49,7 +50,7 @@ export async function saveAssetAction(
   const { publish } = options;
 
   try {
-    const user = await assertRole("SELLER");
+    const user = await assertRole(USER_ROLE.SELLER);
 
     if (assetId) {
       const existing = await prisma.asset.findUnique({ where: { id: assetId } });
@@ -58,7 +59,7 @@ export async function saveAssetAction(
       }
       // A suspended listing cannot be edited back into visibility by its owner;
       // only a platform manager can reinstate it.
-      if (existing.status === "SUSPENDED") {
+      if (existing.status === USER_STATUS.SUSPENDED) {
         return { error: "This listing is suspended. Contact the platform team." };
       }
 
@@ -74,7 +75,7 @@ export async function saveAssetAction(
           data: {
             ...toAssetData(parsed.data),
             slug,
-            status: publish ? (existing.status === "DRAFT" ? "PUBLISHED" : existing.status) : existing.status,
+            status: publish ? (existing.status === ASSET_STATUS.DRAFT ? ASSET_STATUS.PUBLISHED : existing.status) : existing.status,
             publishedAt: publish && !existing.publishedAt ? new Date() : existing.publishedAt,
             features: { create: parsed.data.features.map((code) => ({ code })) },
           },
@@ -86,7 +87,7 @@ export async function saveAssetAction(
           ...toAssetData(parsed.data),
           slug: await uniqueSlug(parsed.data.title),
           sellerId: user.id,
-          status: publish ? "PUBLISHED" : "DRAFT",
+          status: publish ? ASSET_STATUS.PUBLISHED : ASSET_STATUS.DRAFT,
           publishedAt: publish ? new Date() : null,
           features: { create: parsed.data.features.map((code) => ({ code })) },
         },
@@ -98,8 +99,8 @@ export async function saveAssetAction(
     return { error: "Could not save that listing. Try again." };
   }
 
-  revalidatePath("/sell/listings");
-  revalidatePath("/assets");
+  revalidatePath(ROUTES.seller.listings);
+  revalidatePath(ROUTES.assets.index);
   return { ok: true };
 }
 
@@ -134,25 +135,25 @@ export async function setAssetStatusAction(formData: FormData) {
     return;
   }
 
-  const user = await assertRole("SELLER");
+  const user = await assertRole(USER_ROLE.SELLER);
   const asset = await prisma.asset.findUnique({ where: { id: assetId } });
-  if (!asset || asset.sellerId !== user.id || asset.status === "SUSPENDED") return;
+  if (!asset || asset.sellerId !== user.id || asset.status === ASSET_STATUS.SUSPENDED) return;
 
   await prisma.asset.update({
     where: { id: assetId },
     data: {
       status: status as never,
-      publishedAt: status === "PUBLISHED" && !asset.publishedAt ? new Date() : asset.publishedAt,
+      publishedAt: status === ASSET_STATUS.PUBLISHED && !asset.publishedAt ? new Date() : asset.publishedAt,
     },
   });
 
-  revalidatePath("/sell/listings");
-  revalidatePath("/assets");
+  revalidatePath(ROUTES.seller.listings);
+  revalidatePath(ROUTES.assets.index);
 }
 
 export async function toggleFavouriteAction(formData: FormData) {
   const assetId = String(formData.get("assetId"));
-  const user = await assertRole("BUYER");
+  const user = await assertRole(USER_ROLE.BUYER);
 
   const existing = await prisma.favourite.findUnique({
     where: { userId_assetId: { userId: user.id, assetId } },
@@ -164,6 +165,6 @@ export async function toggleFavouriteAction(formData: FormData) {
     await prisma.favourite.create({ data: { userId: user.id, assetId } });
   }
 
-  revalidatePath("/account/watchlist");
+  revalidatePath(ROUTES.buyer.watchlist);
   revalidatePath(`/assets`);
 }
