@@ -14,13 +14,13 @@ import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { getCurrentUser } from "@/server/auth/session";
 import { isAiEnabled } from "@/server/matching/ai";
 import { ROUTES } from "@/routes";
+import { toQueryRecord } from "@/utils/url";
+import type { SearchParams } from "@/types";
 
 export const metadata: Metadata = {
   title: "All listings",
   description: "Licensed financial companies and licences for sale across 30+ jurisdictions.",
 };
-
-type SearchParams = Record<string, string | string[] | undefined>;
 
 export default async function AssetsPage({
   searchParams,
@@ -40,10 +40,6 @@ export default async function AssetsPage({
     getTaxonomy(),
     getActiveFacets(),
   ]);
-
-  const stringParams = Object.fromEntries(
-    Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value.join(",") : value]),
-  );
 
   return (
     <div className="container-page py-10">
@@ -114,7 +110,7 @@ export default async function AssetsPage({
                 page={page}
                 pageCount={pageCount}
                 basePath="/assets"
-                params={stringParams}
+                params={toQueryRecord(raw)}
               />
             </>
           ) : (

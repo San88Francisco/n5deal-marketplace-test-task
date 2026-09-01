@@ -15,10 +15,10 @@ import { getSellerAssets, getTaxonomy } from "@/server/assets/queries";
 import { searchBuyers } from "@/server/buyers/queries";
 import { getSellerProfile } from "@/server/buyers/queries";
 import { ROUTES } from "@/routes";
+import { toQueryRecord } from "@/utils/url";
+import type { SearchParams } from "@/types";
 
 export const metadata: Metadata = { title: "Buyer directory" };
-
-type SearchParams = Record<string, string | string[] | undefined>;
 
 export default async function BuyerDirectoryPage({
   searchParams,
@@ -54,10 +54,6 @@ export default async function BuyerDirectoryPage({
         }
       : null,
   });
-
-  const stringParams = Object.fromEntries(
-    Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value.join(",") : value]),
-  );
 
   return (
     <div className="container-page py-10">
@@ -124,7 +120,7 @@ export default async function BuyerDirectoryPage({
                 page={page}
                 pageCount={pageCount}
                 basePath="/sell/buyers"
-                params={stringParams}
+                params={toQueryRecord(raw)}
               />
             </>
           ) : (

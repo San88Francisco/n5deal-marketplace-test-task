@@ -4,7 +4,8 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/server/db";
 import { AuthorizationError } from "@/server/auth/guards";
-import type { ModerationInput, ParticipantFilters } from "@/lib/validation";
+import type { ManagedAssetFilters, ModerationInput, ParticipantFilters } from "@/lib/validation";
+import type { Paginated } from "@/types";
 import { ADMIN_PAGE_SIZE, ASSET_STATUS, MODERATION_ACTION, USER_ROLE, USER_STATUS } from "@/constants";
 
 export const PAGE_SIZE = ADMIN_PAGE_SIZE;
@@ -123,7 +124,17 @@ export async function applyModeration(actorId: string, input: ModerationInput) {
   await prisma.$transaction(writes);
 }
 
-export async function searchParticipants(filters: ParticipantFilters) {
+const participantInclude = {
+  buyerProfile: { select: { companyName: true, investorType: true, ticketMaxEur: true } },
+  sellerProfile: { select: { companyName: true, sellerType: true, isVerified: true } },
+  _count: { select: { assets: true } },
+} satisfies Prisma.UserInclude;
+
+export type ParticipantListItem = Prisma.UserGetPayload<{ include: typeof participantInclude }>;
+
+export async function searchParticipants(
+  filters: ParticipantFilters,
+): Promise<Paginated<ParticipantListItem>> {
   const and: Prisma.UserWhereInput[] = [];
 
   if (filters.q) {
@@ -145,11 +156,7 @@ export async function searchParticipants(filters: ParticipantFilters) {
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
-      include: {
-        buyerProfile: { select: { companyName: true, investorType: true, ticketMaxEur: true } },
-        sellerProfile: { select: { companyName: true, sellerType: true, isVerified: true } },
-        _count: { select: { assets: true } },
-      },
+      include: participantInclude,
       orderBy: [{ createdAt: "desc" }],
       skip: (filters.page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
@@ -164,8 +171,24 @@ export async function searchParticipants(filters: ParticipantFilters) {
   };
 }
 
-/** Every listing, whatever its state — the manager view is not the public one. */
-export async function searchAllAssets(query: { q?: string; status?: string; page: number }) {
+const managedAssetInclude = {
+  jurisdiction: true,
+  category: true,
+  seller: {
+    select: {
+      id: true,
+      fullName: true,
+      status: true,
+      sellerProfile: { select: { companyName: true } },
+    },
+  },
+} satisfies Prisma.AssetInclude;
+
+export type ManagedAssetListItem = Prisma.AssetGetPayload<{ include: typeof managedAssetInclude }>;
+
+export async function searchAllAssets(
+  query: ManagedAssetFilters,
+): Promise<Paginated<ManagedAssetListItem>> {
   const and: Prisma.AssetWhereInput[] = [];
 
   if (query.q) {
@@ -187,11 +210,7 @@ export async function searchAllAssets(query: { q?: string; status?: string; page
     prisma.asset.count({ where }),
     prisma.asset.findMany({
       where,
-      include: {
-        jurisdiction: true,
-        category: true,
-        seller: { select: { id: true, fullName: true, status: true, sellerProfile: { select: { companyName: true } } } },
-      },
+      include: managedAssetInclude,
       orderBy: [{ updatedAt: "desc" }],
       skip: (query.page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,

@@ -186,14 +186,18 @@ export async function getAssetBySlug(slug: string) {
 }
 
 /** Listings owned by one seller, including drafts and suspended ones. */
-export async function getSellerAssets(sellerId: string) {
+const sellerListInclude = {
+  jurisdiction: true,
+  category: true,
+  _count: { select: { favourites: true, conversations: true } },
+} satisfies Prisma.AssetInclude;
+
+export type SellerAssetListItem = Prisma.AssetGetPayload<{ include: typeof sellerListInclude }>;
+
+export async function getSellerAssets(sellerId: string): Promise<SellerAssetListItem[]> {
   return prisma.asset.findMany({
     where: { sellerId },
-    include: {
-      jurisdiction: true,
-      category: true,
-      _count: { select: { favourites: true, conversations: true } },
-    },
+    include: sellerListInclude,
     orderBy: [{ updatedAt: "desc" }],
   });
 }

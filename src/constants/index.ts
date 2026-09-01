@@ -49,3 +49,69 @@ export const SIGN_UP_ROLE_OPTIONS = [
   { value: "BUYER", title: "Buyer", hint: "Looking to acquire a licensed company" },
   { value: "SELLER", title: "Seller", hint: "Listing a company or licence for sale" },
 ] as const;
+
+export const SELLER_LISTING_COLUMNS = [
+  "Listing",
+  "Status",
+  "Price",
+  "Engagement",
+  "Updated",
+  "",
+] as const;
+
+export const PARTICIPANT_COLUMNS = [
+  "Participant",
+  "Role",
+  "Status",
+  "Detail",
+  "Joined",
+  "",
+] as const;
+
+export const MANAGED_LISTING_COLUMNS = [
+  "Listing",
+  "Seller",
+  "Status",
+  "Price",
+  "Updated",
+  "",
+] as const;
+
+export const PARTICIPANT_FILTER_SELECTS = [
+  {
+    key: "role",
+    label: "Role",
+    options: [
+      { value: "", label: "All roles" },
+      { value: "BUYER", label: "Buyers" },
+      { value: "SELLER", label: "Sellers" },
+      { value: "PLATFORM_MANAGER", label: "Managers" },
+    ],
+  },
+  {
+    key: "status",
+    label: "Status",
+    options: [
+      { value: "", label: "All statuses" },
+      { value: "ACTIVE", label: "Active" },
+      { value: "SUSPENDED", label: "Suspended" },
+      { value: "REMOVED", label: "Removed" },
+    ],
+  },
+];
+
+export const MANAGED_LISTING_FILTER_SELECTS = [
+  {
+    key: "status",
+    label: "Status",
+    options: [
+      { value: "", label: "All statuses" },
+      { value: "PUBLISHED", label: "Published" },
+      { value: "UNDER_OFFER", label: "Under offer" },
+      { value: "DRAFT", label: "Draft" },
+      { value: "SOLD", label: "Sold" },
+      { value: "SUSPENDED", label: "Suspended" },
+      { value: "ARCHIVED", label: "Archived" },
+    ],
+  },
+];
