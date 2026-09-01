@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useTransition } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { flagEmoji, humanise } from "@/lib/format";
+import { flagEmoji, humanise } from "@/utils/format";
+import { ROUTES } from "@/routes";
+import { paramsToObject } from "@/utils/url";
 
 type Option = { value: string; label: string; count?: number };
 
@@ -29,31 +31,27 @@ export function AssetFilters(props: Props) {
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
 
-  const update = useCallback(
-    (mutate: (next: URLSearchParams) => void) => {
-      const next = new URLSearchParams(params.toString());
-      mutate(next);
-      // Any filter change resets to page 1 — staying on page 4 of a different
-      // result set is a classic way to show a user an empty screen.
-      next.delete("page");
-      startTransition(() => router.replace(`/assets?${next.toString()}`, { scroll: false }));
-    },
-    [params, router],
-  );
+  // Plain functions, not useCallback: nothing below is memoised, so a stable
+  // identity would buy nothing and cost a dependency array to keep correct.
+  const update = (mutate: (next: URLSearchParams) => void) => {
+    const next = new URLSearchParams(params.toString());
+    mutate(next);
+    // Any filter change resets to page 1 — staying on page 4 of a different
+    // result set is a classic way to show a user an empty screen.
+    next.delete("page");
+    startTransition(() => router.replace(ROUTES.assets.list(paramsToObject(next)), { scroll: false }));
+  };
 
-  const toggleMulti = useCallback(
-    (key: string, value: string) => {
-      update((next) => {
-        const current = (next.get(key) ?? "").split(",").filter(Boolean);
-        const updated = current.includes(value)
-          ? current.filter((item) => item !== value)
-          : [...current, value];
-        if (updated.length) next.set(key, updated.join(","));
-        else next.delete(key);
-      });
-    },
-    [update],
-  );
+  const toggleMulti = (key: string, value: string) =>
+    update((next) => {
+      const current = (next.get(key) ?? "").split(",").filter(Boolean);
+      const updated = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+
+      if (updated.length) next.set(key, updated.join(","));
+      else next.delete(key);
+    });
 
   const selected = (key: string) => (params.get(key) ?? "").split(",").filter(Boolean);
 

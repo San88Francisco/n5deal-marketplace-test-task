@@ -7,21 +7,15 @@ import { Badge, MatchBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ContactDialog } from "@/components/messages/contact-dialog";
 import { MatchExplainer } from "@/components/assets/match-explainer";
-import {
-  FEATURE_LABEL,
-  LICENCE_STATUS_LABEL,
-  flagEmoji,
-  formatDate,
-  formatMoneyFull,
-  formatNumber,
-  humanise,
-} from "@/lib/format";
+import { FEATURE_LABEL, LICENCE_STATUS_LABEL } from "@/constants";
+import { flagEmoji, formatDate, formatMoneyFull, formatNumber, humanise } from "@/utils/format";
 import { prisma } from "@/server/db";
 import { getAssetBySlug, recordAssetView } from "@/server/assets/queries";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { getCurrentUser } from "@/server/auth/session";
 import { scoreMatch } from "@/server/matching/score";
 import { toggleFavouriteAction } from "@/server/assets/actions";
+import { ROUTES } from "@/routes";
 
 export async function generateMetadata({
   params,
@@ -91,7 +85,7 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="container-page py-10">
-      <Link href="/assets" className="text-[13px] text-ink-500 hover:text-ink-900">
+      <Link href={ROUTES.assets.index} className="text-[13px] text-ink-500 hover:text-ink-900">
         ← All listings
       </Link>
 
@@ -245,13 +239,13 @@ export default async function AssetPage({ params }: { params: Promise<{ slug: st
 
               {!user ? (
                 <Button asChild className="w-full">
-                  <Link href="/sign-up?role=BUYER">Sign up to contact the seller</Link>
+                  <Link href={ROUTES.auth.signUp("BUYER")}>Sign up to contact the seller</Link>
                 </Button>
               ) : null}
 
               {isOwner ? (
                 <Button asChild variant="outline" className="w-full">
-                  <Link href={`/sell/listings/${asset.id}`}>Edit listing</Link>
+                  <Link href={ROUTES.seller.editListing(asset.id)}>Edit listing</Link>
                 </Button>
               ) : null}
             </div>

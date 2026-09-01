@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 
 /**
  * Offset pagination rendered as links, so pages are crawlable, shareable and
@@ -21,13 +21,16 @@ export function Pagination({
   if (pageCount <= 1) return null;
 
   const href = (target: number) => {
-    const search = new URLSearchParams();
-    for (const [key, value] of Object.entries(params)) {
-      if (value && key !== "page") search.set(key, value);
-    }
-    if (target > 1) search.set("page", String(target));
-    const query = search.toString();
-    return query ? `${basePath}?${query}` : basePath;
+    const carried = Object.entries(params).filter(
+      ([key, value]) => Boolean(value) && key !== "page",
+    ) as [string, string][];
+
+    const search = new URLSearchParams([
+      ...carried,
+      ...(target > 1 ? ([["page", String(target)]] as [string, string][]) : []),
+    ]).toString();
+
+    return search ? `${basePath}?${search}` : basePath;
   };
 
   const pages = Array.from({ length: pageCount }, (_, index) => index + 1).filter(

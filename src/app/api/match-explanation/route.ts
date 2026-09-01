@@ -6,7 +6,9 @@ import { getCurrentUser } from "@/server/auth/session";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { explainMatch } from "@/server/matching/ai";
 import { scoreMatch } from "@/server/matching/score";
-import { LICENCE_STATUS_LABEL, humanise } from "@/lib/format";
+import { LICENCE_STATUS_LABEL } from "@/constants";
+import { humanise } from "@/utils/format";
+import { safeJsonParse } from "@/utils/json";
 
 const bodySchema = z.object({ assetId: z.string().trim().min(1).max(40) });
 
@@ -21,12 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "unauthorised" }, { status: 401 });
   }
 
-  let payload: unknown;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ ok: false, reason: "bad_request" }, { status: 400 });
-  }
+  const payload = safeJsonParse(await request.text());
 
   const parsed = bodySchema.safeParse(payload);
   if (!parsed.success) {

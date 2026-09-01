@@ -3,7 +3,8 @@ import "server-only";
 import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
 
-import { BUSINESS_TYPES, LICENCE_STATUSES } from "@/lib/validation";
+import { BUSINESS_TYPES, LICENCE_STATUSES } from "@/constants";
+import { safeJsonParse } from "@/utils/json";
 import type { MatchResult } from "@/server/matching/score";
 
 /**
@@ -17,19 +18,43 @@ import type { MatchResult } from "@/server/matching/score";
  * or the call fails, because a demo that dies without a key is not a demo.
  */
 
-const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
 
-let client: GoogleGenAI | null | undefined;
+/**
+ * The client is built once per process. A container object keeps the cache a
+ * `const` while still allowing the lazy first construction.
+ */
+const clientCache: { current?: GoogleGenAI | null } = {};
 
 function getClient(): GoogleGenAI | null {
-  if (client !== undefined) return client;
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  client = apiKey ? new GoogleGenAI({ apiKey }) : null;
-  return client;
+  if (clientCache.current === undefined) {
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    clientCache.current = apiKey ? new GoogleGenAI({ apiKey }) : null;
+  }
+
+  return clientCache.current;
 }
 
 export function isAiEnabled(): boolean {
   return getClient() !== null;
+}
+
+/**
+ * Gemini returns 503 when the model is momentarily saturated and 429 when the
+ * key is rate-limited. Both are transient and both are common enough on a free
+ * key that one short retry turns most of them into a success. Anything else
+ * fails straight through to the caller's deterministic fallback.
+ */
+async function withRetry<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    const status = (error as { status?: number })?.status;
+    if (status !== 503 && status !== 429) throw error;
+
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    return call();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -46,7 +71,11 @@ const parsedQuerySchema = z.object({
   jurisdictions: z.array(z.string().max(8)).max(20).default([]),
   categories: z.array(z.string().max(32)).max(20).default([]),
   businessTypes: z.array(z.enum(BUSINESS_TYPES)).max(10).catch([]).default([]),
-  licenceStatuses: z.array(z.enum(LICENCE_STATUSES)).max(3).catch([]).default([]),
+  licenceStatuses: z
+    .array(z.enum(LICENCE_STATUSES))
+    .max(3)
+    .catch([])
+    .default([]),
   priceMin: z.number().min(0).max(10_000_000_000).nullable().default(null),
   priceMax: z.number().min(0).max(10_000_000_000).nullable().default(null),
   validatedOnly: z.boolean().default(false),
@@ -70,85 +99,90 @@ export async function parseSmartQuery(
   const ai = getClient();
   if (!ai) return { ok: false, reason: "disabled" };
 
-  const jurisdictionList = taxonomy.jurisdictions.map((j) => `${j.code} (${j.name})`).join(", ");
-  const categoryList = taxonomy.categories.map((c) => `${c.code} (${c.name})`).join(", ");
+  const jurisdictionList = taxonomy.jurisdictions
+    .map((j) => `${j.code} (${j.name})`)
+    .join(", ");
+  const categoryList = taxonomy.categories
+    .map((c) => `${c.code} (${c.name})`)
+    .join(", ");
 
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: query,
-      config: {
-        systemInstruction: [
-          "You convert a plain-English search request into filters for a marketplace of regulated financial companies and licences.",
-          "Only use codes from the lists provided. If the request does not mention something, leave that filter empty — never guess.",
-          "Amounts are in EUR. Interpret 'under 2m' as priceMax 2000000, 'at least 500k' as priceMin 500000.",
-          "'Trading', 'operating' or 'live' means licenceStatuses ACTIVE. 'Shelf', 'clean' or 'dormant' means DORMANT.",
-          "Put anything you could not map to a filter into keywords, or null if nothing is left.",
-          "interpretation is one short sentence, addressed to the user, describing what you filtered for.",
-          `Jurisdiction codes: ${jurisdictionList}`,
-          `Licence category codes: ${categoryList}`,
-        ].join("\n"),
-        // Structured output: the model returns JSON matching this shape rather
-        // than prose we would have to scrape.
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            jurisdictions: { type: Type.ARRAY, items: { type: Type.STRING } },
-            categories: { type: Type.ARRAY, items: { type: Type.STRING } },
-            businessTypes: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING, enum: [...BUSINESS_TYPES] },
+    const response = await withRetry(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: query,
+        config: {
+          systemInstruction: [
+            "You convert a plain-English search request into filters for a marketplace of regulated financial companies and licences.",
+            "Only use codes from the lists provided. If the request does not mention something, leave that filter empty — never guess.",
+            "Amounts are in EUR. Interpret 'under 2m' as priceMax 2000000, 'at least 500k' as priceMin 500000.",
+            "'Trading', 'operating' or 'live' means licenceStatuses ACTIVE. 'Shelf', 'clean' or 'dormant' means DORMANT.",
+            "Put anything you could not map to a filter into keywords, or null if nothing is left.",
+            "interpretation is one short sentence, addressed to the user, describing what you filtered for.",
+            `Jurisdiction codes: ${jurisdictionList}`,
+            `Licence category codes: ${categoryList}`,
+          ].join("\n"),
+          // Structured output: the model returns JSON matching this shape rather
+          // than prose we would have to scrape.
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              jurisdictions: { type: Type.ARRAY, items: { type: Type.STRING } },
+              categories: { type: Type.ARRAY, items: { type: Type.STRING } },
+              businessTypes: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING, enum: [...BUSINESS_TYPES] },
+              },
+              licenceStatuses: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING, enum: [...LICENCE_STATUSES] },
+              },
+              priceMin: { type: Type.NUMBER, nullable: true },
+              priceMax: { type: Type.NUMBER, nullable: true },
+              validatedOnly: { type: Type.BOOLEAN },
+              keywords: { type: Type.STRING, nullable: true },
+              interpretation: { type: Type.STRING },
             },
-            licenceStatuses: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING, enum: [...LICENCE_STATUSES] },
-            },
-            priceMin: { type: Type.NUMBER, nullable: true },
-            priceMax: { type: Type.NUMBER, nullable: true },
-            validatedOnly: { type: Type.BOOLEAN },
-            keywords: { type: Type.STRING, nullable: true },
-            interpretation: { type: Type.STRING },
+            required: ["validatedOnly", "interpretation"],
+            propertyOrdering: [
+              "jurisdictions",
+              "categories",
+              "businessTypes",
+              "licenceStatuses",
+              "priceMin",
+              "priceMax",
+              "validatedOnly",
+              "keywords",
+              "interpretation",
+            ],
           },
-          required: ["validatedOnly", "interpretation"],
-          propertyOrdering: [
-            "jurisdictions",
-            "categories",
-            "businessTypes",
-            "licenceStatuses",
-            "priceMin",
-            "priceMax",
-            "validatedOnly",
-            "keywords",
-            "interpretation",
-          ],
         },
-      },
-    });
+      }),
+    );
 
     const text = response.text?.trim();
     if (!text) return { ok: false, reason: "unparsable" };
 
-    let raw: unknown;
-    try {
-      raw = JSON.parse(text);
-    } catch {
-      return { ok: false, reason: "unparsable" };
-    }
-
-    const parsed = parsedQuerySchema.safeParse(raw);
+    const parsed = parsedQuerySchema.safeParse(safeJsonParse(text));
     if (!parsed.success) return { ok: false, reason: "unparsable" };
 
     // Drop any code the model invented despite the instruction.
-    const validJurisdictions = new Set(taxonomy.jurisdictions.map((j) => j.code));
+    const validJurisdictions = new Set(
+      taxonomy.jurisdictions.map((j) => j.code),
+    );
     const validCategories = new Set(taxonomy.categories.map((c) => c.code));
 
     return {
       ok: true,
       filters: {
         ...parsed.data,
-        jurisdictions: parsed.data.jurisdictions.filter((code) => validJurisdictions.has(code)),
-        categories: parsed.data.categories.filter((code) => validCategories.has(code)),
+        jurisdictions: parsed.data.jurisdictions.filter((code) =>
+          validJurisdictions.has(code),
+        ),
+        categories: parsed.data.categories.filter((code) =>
+          validCategories.has(code),
+        ),
       },
     };
   } catch (error) {
@@ -185,36 +219,38 @@ export async function explainMatch(params: {
   if (!ai) return null;
 
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: [
-        `Buyer thesis: ${params.thesis}`,
-        "",
-        `Listing: ${params.asset.assetTitle}`,
-        `Jurisdiction: ${params.asset.jurisdiction}`,
-        `Licence: ${params.asset.category} (${params.asset.licenceStatus})`,
-        `Asking price: ${
-          params.asset.askingPriceEur == null
-            ? "on request"
-            : `EUR ${params.asset.askingPriceEur.toLocaleString("en-GB")}`
-        }`,
-        `Summary: ${params.asset.summary}`,
-        "",
-        `Match score: ${params.match.score}/100`,
-        `Positive factors: ${params.match.reasons.join("; ") || "none"}`,
-        `Concerns: ${params.match.concerns.join("; ") || "none"}`,
-      ].join("\n"),
-      config: {
-        systemInstruction: [
-          "You advise a buyer on a fintech M&A marketplace.",
-          "You are given a listing, the buyer's investment thesis, and a match score that has ALREADY been calculated. Never recalculate or dispute the score.",
-          "Write two or three sentences: what genuinely fits the thesis, then the single most important reservation.",
-          "Be concrete and sober. No marketing language, no bullet points, no headings.",
-          "If the concerns list is empty, still name the main diligence question a buyer should ask.",
+    const response = await withRetry(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: [
+          `Buyer thesis: ${params.thesis}`,
+          "",
+          `Listing: ${params.asset.assetTitle}`,
+          `Jurisdiction: ${params.asset.jurisdiction}`,
+          `Licence: ${params.asset.category} (${params.asset.licenceStatus})`,
+          `Asking price: ${
+            params.asset.askingPriceEur == null
+              ? "on request"
+              : `EUR ${params.asset.askingPriceEur.toLocaleString("en-GB")}`
+          }`,
+          `Summary: ${params.asset.summary}`,
+          "",
+          `Match score: ${params.match.score}/100`,
+          `Positive factors: ${params.match.reasons.join("; ") || "none"}`,
+          `Concerns: ${params.match.concerns.join("; ") || "none"}`,
         ].join("\n"),
-        maxOutputTokens: 900,
-      },
-    });
+        config: {
+          systemInstruction: [
+            "You advise a buyer on a fintech M&A marketplace.",
+            "You are given a listing, the buyer's investment thesis, and a match score that has ALREADY been calculated. Never recalculate or dispute the score.",
+            "Write two or three sentences: what genuinely fits the thesis, then the single most important reservation.",
+            "Be concrete and sober. No marketing language, no bullet points, no headings.",
+            "If the concerns list is empty, still name the main diligence question a buyer should ask.",
+          ].join("\n"),
+          maxOutputTokens: 900,
+        },
+      }),
+    );
 
     return response.text?.trim() || null;
   } catch (error) {

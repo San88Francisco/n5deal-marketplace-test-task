@@ -5,8 +5,9 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db";
 import { AuthorizationError } from "@/server/auth/guards";
 import type { ModerationInput, ParticipantFilters } from "@/lib/validation";
+import { ADMIN_PAGE_SIZE } from "@/constants";
 
-export const PAGE_SIZE = 15;
+export const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 /**
  * Every manager action goes through this one function so that three invariants

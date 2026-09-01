@@ -5,8 +5,10 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db";
 import type { BuyerFilters } from "@/lib/validation";
 import { scoreMatch, type MatchableAsset, type MatchResult } from "@/server/matching/score";
+import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT } from "@/constants";
+import type { Paginated } from "@/types";
 
-export const PAGE_SIZE = 9;
+export const PAGE_SIZE = CATALOGUE_PAGE_SIZE;
 
 const buyerInclude = {
   user: { select: { id: true, fullName: true, status: true, createdAt: true } },
@@ -85,14 +87,14 @@ function orderBy(sort: BuyerFilters["sort"]): Prisma.BuyerProfileOrderByWithRela
 export async function searchBuyers(
   filters: BuyerFilters,
   options: { asset?: MatchableAsset | null } = {},
-): Promise<{ items: BuyerListItem[]; total: number; page: number; pageCount: number }> {
+): Promise<Paginated<BuyerListItem>> {
   const where = buildBuyerWhere(filters);
   const wantsMatchSort = filters.sort === "match" && options.asset;
 
   // See the note in assets/queries.ts: ranking by score cannot happen in SQL, so
   // a match-sorted page is cut after scoring.
   const pagination: { skip?: number; take: number } = wantsMatchSort
-    ? { take: 200 }
+    ? { take: MATCH_SORT_SCAN_LIMIT }
     : { skip: (filters.page - 1) * PAGE_SIZE, take: PAGE_SIZE };
 
   const [total, rows] = await Promise.all([
@@ -105,30 +107,20 @@ export async function searchBuyers(
     }),
   ]);
 
-  let items: BuyerListItem[] = rows;
+  const { asset } = options;
 
-  if (options.asset) {
-    const asset = options.asset;
-    items = rows.map((buyer) => ({
-      ...buyer,
-      match: scoreMatch(
-        {
-          targetJurisdictions: buyer.targetJurisdictions.map((row) => row.jurisdictionCode),
-          targetCategories: buyer.targetCategories.map((row) => row.categoryCode),
-          targetBusinessTypes: buyer.targetBusinessTypes.map((row) => row.businessType),
-          ticketMinEur: Number(buyer.ticketMinEur),
-          ticketMaxEur: Number(buyer.ticketMaxEur),
-          wantsOperatingOnly: buyer.wantsOperatingOnly,
-        },
-        asset,
-      ),
-    }));
+  const scored: BuyerListItem[] = asset
+    ? rows.map((buyer) => ({
+        ...buyer,
+        match: scoreMatch(toMatchableBuyer(buyer), asset),
+      }))
+    : rows;
 
-    if (wantsMatchSort) {
-      items.sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0));
-      items = items.slice((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE);
-    }
-  }
+  const items = wantsMatchSort
+    ? [...scored]
+        .sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0))
+        .slice((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE)
+    : scored;
 
   return {
     items,

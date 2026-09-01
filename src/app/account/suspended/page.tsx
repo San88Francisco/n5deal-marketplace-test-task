@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getAuthState } from "@/server/auth/session";
 import { signOutAction } from "@/server/auth/actions";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/routes";
 
 export const metadata: Metadata = { title: "Account suspended" };
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Account suspended" };
  */
 export default async function SuspendedPage() {
   const state = await getAuthState();
-  if (state.status !== "suspended") redirect("/");
+  if (state.status !== "suspended") redirect(ROUTES.home);
 
   return (
     <div className="container-page flex justify-center py-20">

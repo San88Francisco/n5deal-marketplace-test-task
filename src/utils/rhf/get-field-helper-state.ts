@@ -16,8 +16,7 @@ export const getFieldHelperState = (
   const hasError = Boolean(fieldState.error);
   const errorMessage = fieldState.error?.message;
 
-  let message: ReactNode | undefined;
-  let helperVariant: NonNullable<ComponentProps<typeof HelperText>["variant"]> = "default";
+  type Variant = NonNullable<ComponentProps<typeof HelperText>["variant"]>;
 
   const helperState =
     hasError && errorMessage
@@ -28,22 +27,12 @@ export const getFieldHelperState = (
           ? "default"
           : "none";
 
-  switch (helperState) {
-    case "error":
-      message = errorMessage;
-      helperVariant = "error";
-      break;
-    case "warning":
-      message = warningText;
-      helperVariant = "warning";
-      break;
-    case "default":
-      message = helperText;
-      helperVariant = "default";
-      break;
-    case "none":
-      break;
-  }
+  const states: Record<string, { message?: ReactNode; helperVariant: Variant }> = {
+    error: { message: errorMessage, helperVariant: "error" },
+    warning: { message: warningText, helperVariant: "warning" },
+    default: { message: helperText, helperVariant: "default" },
+    none: { message: undefined, helperVariant: "default" },
+  };
 
-  return { hasError, message, helperVariant };
+  return { hasError, ...states[helperState] };
 };

@@ -1,9 +1,10 @@
 import "server-only";
 
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { User, UserRole } from "@prisma/client";
 
 import { getAuthState } from "@/server/auth/session";
+import { ROUTES } from "@/routes";
 
 /**
  * Authorisation lives here — next to the data, not in middleware.
@@ -17,8 +18,8 @@ import { getAuthState } from "@/server/auth/session";
 export async function requireUser(): Promise<User> {
   const state = await getAuthState();
 
-  if (state.status === "suspended") redirect("/account/suspended");
-  if (state.status === "anonymous") redirect("/sign-in");
+  if (state.status === "suspended") redirect(ROUTES.auth.suspended);
+  if (state.status === "anonymous") redirect(ROUTES.auth.signIn);
 
   return state.user;
 }
@@ -29,7 +30,7 @@ export async function requireRole(...roles: UserRole[]): Promise<User> {
   if (!roles.includes(user.role)) {
     // 404 rather than 403: a buyer poking at /manage should not learn that a
     // manager console exists at that path.
-    redirect("/not-found");
+    notFound();
   }
 
   return user;

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Link from "next/link";
 
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,28 +26,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="flex min-h-screen flex-col">
         <SiteHeader />
         <main className="flex-1">{children}</main>
-
-        <footer className="mt-16 border-t border-ink-100 bg-white">
-          <div className="container-page flex flex-col gap-3 py-8 text-[13px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              N5Deal prototype — built as a technical assignment. Data is fictional and for
-              demonstration only.
-            </p>
-            <div className="flex gap-4">
-              <Link href="/assets" className="hover:text-ink-900">
-                All listings
-              </Link>
-              <a
-                href="https://n5deal.com"
-                className="hover:text-ink-900"
-                target="_blank"
-                rel="noreferrer"
-              >
-                n5deal.com
-              </a>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ import { searchAssets } from "@/server/assets/queries";
 import { assetFilterSchema } from "@/lib/validation";
 import { getPlatformStats } from "@/server/moderation/service";
 import { getCurrentUser } from "@/server/auth/session";
-import { landingFor } from "@/lib/routes";
+import { landingFor, ROUTES } from "@/routes";
 import { redirect } from "next/navigation";
 
 export default async function HomePage() {
@@ -36,7 +36,7 @@ export default async function HomePage() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" variant="accent">
-                <Link href="/sign-up?role=BUYER">I am buying</Link>
+                <Link href={ROUTES.auth.signUp("BUYER")}>I am buying</Link>
               </Button>
               <Button
                 asChild
@@ -44,7 +44,7 @@ export default async function HomePage() {
                 variant="outline"
                 className="border-navy-700 bg-transparent text-white hover:bg-navy-900"
               >
-                <Link href="/sign-up?role=SELLER">I am selling</Link>
+                <Link href={ROUTES.auth.signUp("SELLER")}>I am selling</Link>
               </Button>
               <Button
                 asChild
@@ -52,7 +52,7 @@ export default async function HomePage() {
                 variant="ghost"
                 className="text-ink-200 hover:bg-navy-900 hover:text-white"
               >
-                <Link href="/assets">Browse listings</Link>
+                <Link href={ROUTES.assets.index}>Browse listings</Link>
               </Button>
             </div>
           </div>
@@ -82,7 +82,7 @@ export default async function HomePage() {
             </h2>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href="/assets">See all listings</Link>
+            <Link href={ROUTES.assets.index}>See all listings</Link>
           </Button>
         </div>
 

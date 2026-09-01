@@ -5,8 +5,10 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db";
 import type { AssetFilters } from "@/lib/validation";
 import { scoreMatch, type MatchableBuyer, type MatchResult } from "@/server/matching/score";
+import { CATALOGUE_PAGE_SIZE, MATCH_SORT_SCAN_LIMIT, PUBLIC_ASSET_STATUSES } from "@/constants";
+import type { Paginated } from "@/types";
 
-export const PAGE_SIZE = 9;
+export const PAGE_SIZE = CATALOGUE_PAGE_SIZE;
 
 /**
  * Statuses a listing can have and still be visible to buyers. SOLD stays in the
@@ -14,7 +16,7 @@ export const PAGE_SIZE = 9;
  * M&A, and hiding it makes the marketplace look thinner than it is.
  */
 const PUBLIC_STATUSES: Prisma.EnumAssetStatusFilter = {
-  in: ["PUBLISHED", "UNDER_OFFER", "SOLD"],
+  in: [...PUBLIC_ASSET_STATUSES],
 };
 
 /**
@@ -61,9 +63,11 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
 
   // Every requested feature must be present, so one AND clause per feature
   // rather than a single `in` (which would mean "any of").
-  for (const feature of filters.features) {
-    and.push({ features: { some: { code: feature as never } } });
-  }
+  and.push(
+    ...filters.features.map((feature) => ({
+      features: { some: { code: feature as never } },
+    })),
+  );
 
   if (filters.priceMin != null || filters.priceMax != null) {
     const range: Prisma.DecimalFilter = {};
@@ -110,7 +114,7 @@ export type AssetListItem = Prisma.AssetGetPayload<{ include: typeof listInclude
 export async function searchAssets(
   filters: AssetFilters,
   options: { buyer?: MatchableBuyer | null } = {},
-): Promise<{ items: AssetListItem[]; total: number; page: number; pageCount: number }> {
+): Promise<Paginated<AssetListItem>> {
   const where = buildAssetWhere(filters);
   const wantsMatchSort = filters.sort === "match" && options.buyer;
 
@@ -118,7 +122,7 @@ export async function searchAssets(
   // requested we pull the filtered set and page after ranking. Safe at this data
   // volume; at scale the score would be precomputed into a column.
   const pagination: { skip?: number; take: number } = wantsMatchSort
-    ? { take: 200 }
+    ? { take: MATCH_SORT_SCAN_LIMIT }
     : { skip: (filters.page - 1) * PAGE_SIZE, take: PAGE_SIZE };
 
   const [total, rows] = await Promise.all([
@@ -131,27 +135,27 @@ export async function searchAssets(
     }),
   ]);
 
-  let items: AssetListItem[] = rows;
+  const { buyer } = options;
 
-  if (options.buyer) {
-    const buyer = options.buyer;
-    items = rows.map((asset) => ({
-      ...asset,
-      match: scoreMatch(buyer, {
-        jurisdictionCode: asset.jurisdictionCode,
-        categoryCode: asset.categoryCode,
-        businessType: asset.businessType,
-        askingPriceEur: asset.askingPriceEur ? Number(asset.askingPriceEur) : null,
-        licenceStatus: asset.licenceStatus,
-        isValidated: asset.isValidated,
-      }),
-    }));
+  const scored: AssetListItem[] = buyer
+    ? rows.map((asset) => ({
+        ...asset,
+        match: scoreMatch(buyer, {
+          jurisdictionCode: asset.jurisdictionCode,
+          categoryCode: asset.categoryCode,
+          businessType: asset.businessType,
+          askingPriceEur: asset.askingPriceEur ? Number(asset.askingPriceEur) : null,
+          licenceStatus: asset.licenceStatus,
+          isValidated: asset.isValidated,
+        }),
+      }))
+    : rows;
 
-    if (wantsMatchSort) {
-      items.sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0));
-      items = items.slice((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE);
-    }
-  }
+  const items = wantsMatchSort
+    ? [...scored]
+        .sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0))
+        .slice((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE)
+    : scored;
 
   return {
     items,

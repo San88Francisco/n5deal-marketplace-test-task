@@ -51,14 +51,33 @@ workspace split. I collapsed it. Reasons, in order of weight:
 What replaces it is not "no backend", it is a **layered server module**:
 
 ```
-src/server/
-  auth/        session issue/verify, password hashing, guards
-  assets/      queries + mutations for listings
-  buyers/      buyer directory + profile
-  moderation/  manager actions, all writing to the audit trail
-  matching/    scoring engine + AI layer
-  db.ts        Prisma singleton
+src/
+  server/      the backend: one folder per bounded context
+    auth/        session issue/verify, password hashing, guards
+    assets/      queries + mutations for listings
+    buyers/      buyer directory + profile
+    conversations/ threads between the two sides
+    moderation/  manager actions, all writing to the audit trail
+    matching/    scoring engine + AI layer
+    db.ts        Prisma singleton
+  routes/      every URL in the app, as typed helpers
+  constants/   closed sets and labels, shared by server and client
+  types/       what travels between layers
+  utils/       formatting, cn, json, url helpers
+  components/
+    rhf/         form-field wrappers over react-hook-form
+    ui/          primitives
+    <feature>/   feature components
+  lib/validation.ts  Zod schemas
 ```
+
+Two conventions worth naming. **No route string is written inline** — everything
+goes through `ROUTES`, so renaming a path is a compile error rather than a
+silent dead link. And **the form layer is one pattern, not per-form code**: a
+`RHFForm` provider plus field wrappers (`RHFInput`, `RHFSelect`,
+`RHFMultiSelect`, …) that all resolve their error/warning/hint state through a
+single `getFieldHelperState`, so every field in the product behaves the same
+way.
 
 Route Handlers and Server Actions are thin: they parse input with Zod,
 call a guard, delegate to a module, and map the result to a response. No

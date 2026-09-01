@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { signInAction, signUpAction, type ActionState } from "@/server/auth/actions";
+import { ROUTES } from "@/routes";
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
@@ -59,7 +60,7 @@ export function SignInForm() {
 
       <p className="text-center text-[13px] text-ink-500">
         No account yet?{" "}
-        <Link href="/sign-up" className="font-medium text-navy-700 hover:underline">
+        <Link href={ROUTES.auth.signUp()} className="font-medium text-navy-700 hover:underline">
           Create one
         </Link>
       </p>
@@ -149,7 +150,7 @@ export function SignUpForm({ defaultRole }: { defaultRole?: "BUYER" | "SELLER" }
 
       <p className="text-center text-[13px] text-ink-500">
         Already registered?{" "}
-        <Link href="/sign-in" className="font-medium text-navy-700 hover:underline">
+        <Link href={ROUTES.auth.signIn} className="font-medium text-navy-700 hover:underline">
           Sign in
         </Link>
       </p>

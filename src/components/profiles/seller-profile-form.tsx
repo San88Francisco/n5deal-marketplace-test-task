@@ -7,9 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
 import { RHFForm, RHFInput, RHFMultiSelect, RHFSelect, RHFTextarea } from "@/components/rhf";
-import { humanise } from "@/lib/format";
-import { SELLER_TYPES, sellerProfileSchema, type SellerProfileInput } from "@/lib/validation";
+import { humanise } from "@/utils/format";
+import { SELLER_TYPES } from "@/constants";
+import { sellerProfileSchema, type SellerProfileInput } from "@/lib/validation";
 import { saveSellerProfileAction } from "@/server/profiles/actions";
+import { ROUTES } from "@/routes";
 
 export function SellerProfileForm({
   jurisdictions,
@@ -49,7 +51,7 @@ export function SellerProfileForm({
     }
 
     setSaved(true);
-    if (isNew) router.push("/sell/listings/new");
+    if (isNew) router.push(ROUTES.seller.newListing);
     else router.refresh();
   }
 

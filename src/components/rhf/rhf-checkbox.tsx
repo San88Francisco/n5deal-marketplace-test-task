@@ -12,7 +12,7 @@ import {
 
 import { getFieldHelperState } from "@/utils/rhf/get-field-helper-state";
 import { Checkbox, HelperText } from "@/components/ui/form-primitives";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 
 type RHFCheckboxProps<T extends FieldValues> = {
   name: FieldPath<T>;

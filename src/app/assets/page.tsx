@@ -7,11 +7,13 @@ import { AssetFilters } from "@/components/assets/asset-filters";
 import { SmartSearch } from "@/components/assets/smart-search";
 import { Pagination } from "@/components/ui/pagination";
 import { SortSelect } from "@/components/ui/sort-select";
-import { ASSET_FEATURES, BUSINESS_TYPES, LICENCE_STATUSES, assetFilterSchema } from "@/lib/validation";
+import { ASSET_FEATURES, BUSINESS_TYPES, LICENCE_STATUSES } from "@/constants";
+import { assetFilterSchema } from "@/lib/validation";
 import { getActiveFacets, getTaxonomy, searchAssets } from "@/server/assets/queries";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { getCurrentUser } from "@/server/auth/session";
 import { isAiEnabled } from "@/server/matching/ai";
+import { ROUTES } from "@/routes";
 
 export const metadata: Metadata = {
   title: "All listings",
@@ -83,7 +85,7 @@ export default async function AssetsPage({
           <p className="mt-1 text-[13px] text-ink-700">
             Tell us the jurisdictions, licence types and cheque size you are after, and every
             listing gets scored against it.{" "}
-            <Link href="/account/buyer-profile" className="font-medium underline">
+            <Link href={ROUTES.buyer.profile} className="font-medium underline">
               Set up now
             </Link>
           </p>
@@ -126,7 +128,7 @@ export default async function AssetsPage({
                 included by default — check that you have not switched them off.
               </p>
               <Link
-                href="/assets"
+                href={ROUTES.assets.index}
                 className="mt-4 text-[13.5px] font-medium text-navy-700 hover:underline"
               >
                 Clear all filters

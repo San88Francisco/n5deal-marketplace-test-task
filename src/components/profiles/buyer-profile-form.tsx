@@ -14,15 +14,11 @@ import {
   RHFSwitch,
   RHFTextarea,
 } from "@/components/rhf";
-import { humanise } from "@/lib/format";
-import {
-  BUSINESS_TYPES,
-  INVESTOR_TYPES,
-  TIMELINES,
-  buyerProfileSchema,
-  type BuyerProfileInput,
-} from "@/lib/validation";
+import { humanise } from "@/utils/format";
+import { BUSINESS_TYPES, INVESTOR_TYPES, TIMELINES } from "@/constants";
+import { buyerProfileSchema, type BuyerProfileInput } from "@/lib/validation";
 import { saveBuyerProfileAction } from "@/server/profiles/actions";
+import { ROUTES } from "@/routes";
 
 const TIMELINE_LABELS: Record<string, string> = {
   IMMEDIATE: "Immediate — under 3 months",
@@ -89,7 +85,7 @@ export function BuyerProfileForm({
     setSaved(true);
     // A first-time buyer goes straight to the marketplace, where their new
     // mandate is already scoring listings — that payoff should be immediate.
-    if (isNew) router.push("/assets");
+    if (isNew) router.push(ROUTES.assets.index);
     else router.refresh();
   }
 

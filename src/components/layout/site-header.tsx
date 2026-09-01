@@ -4,6 +4,7 @@ import { getAuthState } from "@/server/auth/session";
 import { countUnread } from "@/server/conversations/service";
 import { signOutAction } from "@/server/auth/actions";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/routes";
 
 type NavItem = { href: string; label: string };
 
@@ -11,28 +12,28 @@ type NavItem = { href: string; label: string };
  *  which keeps the product legible and the permission model obvious. */
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
   BUYER: [
-    { href: "/assets", label: "All listings" },
-    { href: "/account/matches", label: "Matched for you" },
-    { href: "/account/watchlist", label: "Watchlist" },
-    { href: "/messages", label: "Messages" },
-    { href: "/account/buyer-profile", label: "My mandate" },
+    { href: ROUTES.assets.index, label: "All listings" },
+    { href: ROUTES.buyer.matches, label: "Matched for you" },
+    { href: ROUTES.buyer.watchlist, label: "Watchlist" },
+    { href: ROUTES.messages.index, label: "Messages" },
+    { href: ROUTES.buyer.profile, label: "My mandate" },
   ],
   SELLER: [
-    { href: "/sell/listings", label: "My listings" },
-    { href: "/sell/buyers", label: "Buyer directory" },
-    { href: "/assets", label: "All listings" },
-    { href: "/messages", label: "Messages" },
-    { href: "/account/seller-profile", label: "Company" },
+    { href: ROUTES.seller.listings, label: "My listings" },
+    { href: ROUTES.seller.buyers, label: "Buyer directory" },
+    { href: ROUTES.assets.index, label: "All listings" },
+    { href: ROUTES.messages.index, label: "Messages" },
+    { href: ROUTES.seller.profile, label: "Company" },
   ],
   PLATFORM_MANAGER: [
-    { href: "/manage", label: "Overview" },
-    { href: "/manage/participants", label: "Participants" },
-    { href: "/manage/listings", label: "Listings" },
-    { href: "/manage/audit", label: "Audit trail" },
+    { href: ROUTES.manage.overview, label: "Overview" },
+    { href: ROUTES.manage.participants(), label: "Participants" },
+    { href: ROUTES.manage.listings(), label: "Listings" },
+    { href: ROUTES.manage.audit, label: "Audit trail" },
   ],
 };
 
-const ANONYMOUS_NAV: NavItem[] = [{ href: "/assets", label: "All listings" }];
+const ANONYMOUS_NAV: NavItem[] = [{ href: ROUTES.assets.index, label: "All listings" }];
 
 export async function SiteHeader() {
   const state = await getAuthState();
@@ -43,7 +44,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-navy-800 bg-navy-950">
       <div className="container-page flex h-16 items-center gap-6">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href={ROUTES.home} className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded bg-accent-500 text-[15px] font-bold text-navy-950">
             N5
           </span>
@@ -58,7 +59,7 @@ export async function SiteHeader() {
               className="relative rounded px-3 py-2 text-[13.5px] text-ink-200 transition-colors hover:bg-navy-900 hover:text-white"
             >
               {item.label}
-              {item.href === "/messages" && unread > 0 ? (
+              {item.href === ROUTES.messages.index && unread > 0 ? (
                 <span className="ml-1.5 rounded-full bg-accent-500 px-1.5 py-0.5 text-[10.5px] font-semibold text-navy-950">
                   {unread}
                 </span>
@@ -90,10 +91,10 @@ export async function SiteHeader() {
           ) : (
             <>
               <Button asChild variant="ghost" size="sm" className="text-ink-200 hover:bg-navy-900 hover:text-white">
-                <Link href="/sign-in">Sign in</Link>
+                <Link href={ROUTES.auth.signIn}>Sign in</Link>
               </Button>
               <Button asChild variant="accent" size="sm">
-                <Link href="/sign-up">Create account</Link>
+                <Link href={ROUTES.auth.signUp()}>Create account</Link>
               </Button>
             </>
           )}

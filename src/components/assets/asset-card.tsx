@@ -2,15 +2,10 @@ import Link from "next/link";
 import { BadgeCheck, Eye, Heart, Users } from "lucide-react";
 
 import { Badge, MatchBadge } from "@/components/ui/badge";
-import {
-  FEATURE_LABEL,
-  LICENCE_STATUS_LABEL,
-  flagEmoji,
-  formatMoneyShort,
-  formatNumber,
-  humanise,
-} from "@/lib/format";
+import { FEATURE_LABEL, LICENCE_STATUS_LABEL } from "@/constants";
+import { flagEmoji, formatMoneyShort, formatNumber, humanise } from "@/utils/format";
 import type { AssetListItem } from "@/server/assets/queries";
+import { ROUTES } from "@/routes";
 
 /**
  * The listing card mirrors how N5Deal presents an asset: reference number,
@@ -48,7 +43,7 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
       </div>
 
       <h3 className="mt-3 text-[15.5px] font-semibold leading-snug text-ink-900">
-        <Link href={`/assets/${asset.slug}`} className="after:absolute after:inset-0">
+        <Link href={ROUTES.assets.detail(asset.slug)} className="after:absolute after:inset-0">
           {asset.title}
         </Link>
       </h3>

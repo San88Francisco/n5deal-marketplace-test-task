@@ -1,44 +1,20 @@
 import { z } from "zod";
 
+import {
+  ASSET_FEATURES,
+  BUSINESS_TYPES,
+  INVESTOR_TYPES,
+  LICENCE_STATUSES,
+  SELLER_TYPES,
+  TIMELINES,
+} from "@/constants";
+
 /**
  * One schema per concept, shared by the form (react-hook-form resolver), the
  * Server Action and the Route Handler. A rule written here cannot be bypassed
  * by posting straight to the endpoint, which is the point: the UI is not a
  * validation layer.
  */
-
-export const ROLES = ["BUYER", "SELLER", "PLATFORM_MANAGER"] as const;
-export const INVESTOR_TYPES = [
-  "STRATEGIC",
-  "PRIVATE_EQUITY",
-  "VENTURE_CAPITAL",
-  "FAMILY_OFFICE",
-  "ANGEL",
-  "CORPORATE",
-  "OTHER",
-] as const;
-export const TIMELINES = ["IMMEDIATE", "SHORT", "MEDIUM", "EXPLORING"] as const;
-export const SELLER_TYPES = ["OWNER", "BROKER", "ADVISORY_FIRM"] as const;
-export const BUSINESS_TYPES = [
-  "PAYMENT",
-  "FINTECH",
-  "CRYPTO",
-  "BANKING",
-  "FOREX",
-  "GAMING",
-  "OTHER",
-] as const;
-export const LICENCE_STATUSES = ["ACTIVE", "IN_APPLICATION", "DORMANT"] as const;
-export const ASSET_FEATURES = [
-  "STAFF",
-  "OFFICE",
-  "BANK_ACCOUNTS",
-  "MULTI_CURRENCY",
-  "SOFTWARE_PLATFORM",
-  "PAYMENT_RAILS",
-  "CLIENT_BASE",
-  "SECURITY_AUDIT",
-] as const;
 
 // ---------------------------------------------------------------------------
 // Auth

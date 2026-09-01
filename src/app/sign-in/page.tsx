@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SignInForm } from "@/components/auth/auth-forms";
 import { getCurrentUser } from "@/server/auth/session";
-import { landingFor } from "@/lib/routes";
+import { landingFor } from "@/routes";
 import { DemoAccounts } from "@/components/auth/demo-accounts";
 
 export const metadata: Metadata = { title: "Sign in" };

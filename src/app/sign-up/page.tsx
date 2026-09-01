@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SignUpForm } from "@/components/auth/auth-forms";
 import { getCurrentUser } from "@/server/auth/session";
-import { landingFor } from "@/lib/routes";
+import { landingFor } from "@/routes";
 
 export const metadata: Metadata = { title: "Create an account" };
 

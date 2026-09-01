@@ -12,10 +12,10 @@
 import { PrismaClient, type BusinessType, type AssetFeatureCode } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+import { BCRYPT_ROUNDS, DEMO_PASSWORD } from "../src/constants";
+
 const prisma = new PrismaClient();
 
-/** Every demo account shares this password — it is printed at the end of the run. */
-const DEMO_PASSWORD = "n5deal-demo-2026";
 
 const JURISDICTIONS = [
   { code: "LT", name: "Lithuania", region: "EU" },
@@ -779,7 +779,7 @@ async function main() {
   await prisma.jurisdiction.createMany({ data: JURISDICTIONS });
   await prisma.licenceCategory.createMany({ data: CATEGORIES });
 
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, BCRYPT_ROUNDS);
 
   console.log("Seeding platform managers...");
   const manager = await prisma.user.create({
@@ -792,109 +792,95 @@ async function main() {
   });
 
   console.log("Seeding sellers...");
-  const sellersByEmail = new Map<string, string>();
-  for (const seller of SELLERS) {
-    const user = await prisma.user.create({
-      data: {
-        email: seller.email,
-        passwordHash,
-        fullName: seller.fullName,
-        role: "SELLER",
-        status: seller.status ?? "ACTIVE",
-        statusReason: seller.statusReason,
-        sellerProfile: {
-          create: {
-            companyName: seller.companyName,
-            headline: seller.headline,
-            about: seller.about,
-            country: seller.country,
-            sellerType: seller.sellerType,
-            isVerified: seller.isVerified,
-            operatesIn: {
-              create: seller.operatesIn.map((code) => ({ jurisdictionCode: code })),
+  const sellerRows = await Promise.all(
+    SELLERS.map((seller) =>
+      prisma.user.create({
+        data: {
+          email: seller.email,
+          passwordHash,
+          fullName: seller.fullName,
+          role: "SELLER",
+          status: seller.status ?? "ACTIVE",
+          statusReason: seller.statusReason,
+          sellerProfile: {
+            create: {
+              companyName: seller.companyName,
+              headline: seller.headline,
+              about: seller.about,
+              country: seller.country,
+              sellerType: seller.sellerType,
+              isVerified: seller.isVerified,
+              operatesIn: {
+                create: seller.operatesIn.map((code) => ({ jurisdictionCode: code })),
+              },
             },
           },
         },
-      },
-    });
-    sellersByEmail.set(seller.email, user.id);
-  }
+      }),
+    ),
+  );
+  const sellersByEmail = new Map(sellerRows.map((user) => [user.email, user.id]));
 
   console.log("Seeding buyers...");
-  const buyersByEmail = new Map<string, string>();
-  for (const buyer of BUYERS) {
-    const user = await prisma.user.create({
-      data: {
-        email: buyer.email,
-        passwordHash,
-        fullName: buyer.fullName,
-        role: "BUYER",
-        buyerProfile: {
-          create: {
-            companyName: buyer.companyName,
-            headline: buyer.headline,
-            about: buyer.about,
-            country: buyer.country,
-            investorType: buyer.investorType,
-            ticketMinEur: buyer.ticketMinEur,
-            ticketMaxEur: buyer.ticketMaxEur,
-            timeline: buyer.timeline,
-            wantsOperatingOnly: buyer.wantsOperatingOnly,
-            proofOfFundsReady: buyer.proofOfFundsReady,
-            investmentThesis: buyer.investmentThesis,
-            isPublished: buyer.isPublished ?? true,
-            targetJurisdictions: {
-              create: buyer.targetJurisdictions.map((code) => ({ jurisdictionCode: code })),
-            },
-            targetCategories: {
-              create: buyer.targetCategories.map((code) => ({ categoryCode: code })),
-            },
-            targetBusinessTypes: {
-              create: buyer.targetBusinessTypes.map((businessType) => ({ businessType })),
+  const buyerRows = await Promise.all(
+    BUYERS.map((buyer) =>
+      prisma.user.create({
+        data: {
+          email: buyer.email,
+          passwordHash,
+          fullName: buyer.fullName,
+          role: "BUYER",
+          buyerProfile: {
+            create: {
+              companyName: buyer.companyName,
+              headline: buyer.headline,
+              about: buyer.about,
+              country: buyer.country,
+              investorType: buyer.investorType,
+              ticketMinEur: buyer.ticketMinEur,
+              ticketMaxEur: buyer.ticketMaxEur,
+              timeline: buyer.timeline,
+              wantsOperatingOnly: buyer.wantsOperatingOnly,
+              proofOfFundsReady: buyer.proofOfFundsReady,
+              investmentThesis: buyer.investmentThesis,
+              isPublished: buyer.isPublished ?? true,
+              targetJurisdictions: {
+                create: buyer.targetJurisdictions.map((code) => ({ jurisdictionCode: code })),
+              },
+              targetCategories: {
+                create: buyer.targetCategories.map((code) => ({ categoryCode: code })),
+              },
+              targetBusinessTypes: {
+                create: buyer.targetBusinessTypes.map((businessType) => ({ businessType })),
+              },
             },
           },
         },
-      },
-    });
-    buyersByEmail.set(buyer.email, user.id);
-  }
+      }),
+    ),
+  );
+  const buyersByEmail = new Map(buyerRows.map((user) => [user.email, user.id]));
 
   console.log("Seeding assets...");
-  const assetsBySlug = new Map<string, string>();
-  for (const asset of ASSETS) {
-    const sellerId = sellersByEmail.get(asset.sellerEmail);
-    if (!sellerId) throw new Error(`Unknown seller ${asset.sellerEmail}`);
+  const assetRows = await Promise.all(
+    ASSETS.map((asset) => {
+      const sellerId = sellersByEmail.get(asset.sellerEmail);
+      if (!sellerId) throw new Error(`Unknown seller ${asset.sellerEmail}`);
 
-    const created = await prisma.asset.create({
-      data: {
-        sellerId,
-        slug: asset.slug,
-        title: asset.title,
-        summary: asset.summary,
-        description: asset.description,
-        jurisdictionCode: asset.jurisdictionCode,
-        categoryCode: asset.categoryCode,
-        businessType: asset.businessType,
-        askingPriceEur: asset.askingPriceEur,
-        revenueEur: asset.revenueEur,
-        ebitdaEur: asset.ebitdaEur,
-        licenceStatus: asset.licenceStatus,
-        regulator: asset.regulator,
-        licenceIssuedYear: asset.licenceIssuedYear,
-        yearEstablished: asset.yearEstablished,
-        employees: asset.employees,
-        activeClients: asset.activeClients,
-        hasPassporting: asset.hasPassporting,
-        reasonForSale: asset.reasonForSale,
-        status: asset.status,
-        isValidated: asset.isValidated,
-        viewCount: asset.viewCount,
-        publishedAt: asset.status === "DRAFT" ? null : new Date(),
-        features: { create: asset.features.map((code) => ({ code })) },
-      },
-    });
-    assetsBySlug.set(asset.slug, created.id);
-  }
+      const { sellerEmail: _sellerEmail, features, status, ...rest } = asset;
+
+      return prisma.asset.create({
+        data: {
+          ...rest,
+          sellerId,
+          status,
+          publishedAt: status === "DRAFT" ? null : new Date(),
+          features: { create: features.map((code) => ({ code })) },
+        },
+      });
+    }),
+  );
+  const assetsBySlug = new Map(assetRows.map((asset) => [asset.slug, asset.id]));
 
   console.log("Seeding conversations...");
   const nordway = buyersByEmail.get("buyer@n5deal.demo")!;

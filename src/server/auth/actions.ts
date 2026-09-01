@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/server/db";
 import { signInSchema, signUpSchema } from "@/lib/validation";
 import { createSession, destroySession, hashPassword, verifyPassword } from "@/server/auth/session";
-import { landingFor } from "@/lib/routes";
+import { landingFor, ROUTES } from "@/routes";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string[]> };
 
@@ -86,5 +86,5 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
 
 export async function signOutAction() {
   await destroySession();
-  redirect("/");
+  redirect(ROUTES.home);
 }

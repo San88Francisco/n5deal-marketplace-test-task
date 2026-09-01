@@ -6,11 +6,10 @@ import bcrypt from "bcryptjs";
 import type { User } from "@prisma/client";
 
 import { prisma } from "@/server/db";
+import { SESSION_COOKIE } from "@/server/auth/constants";
+import { BCRYPT_ROUNDS, SESSION_TTL_DAYS } from "@/constants";
 
-export const SESSION_COOKIE = "n5deal_session";
-
-const SESSION_TTL_DAYS = 7;
-const BCRYPT_ROUNDS = 10;
+export { SESSION_COOKIE };
 
 /**
  * The cookie carries a raw 256-bit token; the database stores only its SHA-256

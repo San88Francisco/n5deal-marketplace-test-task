@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { replySchema, startConversationSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
 import { replyToConversation, startConversation } from "@/server/conversations/service";
+import { ROUTES } from "@/routes";
 
 export type ContactState = { error?: string; fieldErrors?: Record<string, string[]> };
 
@@ -44,7 +45,7 @@ export async function contactAction(
   }
 
   revalidatePath("/messages");
-  redirect(`/messages/${conversationId}`);
+  redirect(ROUTES.messages.thread(conversationId));
 }
 
 export async function replyAction(_prev: ContactState, formData: FormData): Promise<ContactState> {

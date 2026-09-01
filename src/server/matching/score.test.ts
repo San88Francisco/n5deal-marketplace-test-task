@@ -89,11 +89,11 @@ describe("scoreMatch", () => {
       { ...asset, jurisdictionCode: "XX", categoryCode: "XX", businessType: "XX" },
     ];
 
-    for (const candidate of cases) {
+    cases.forEach((candidate) => {
       const { score } = scoreMatch(buyer, candidate);
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
-    }
+    });
   });
 
   it("survives a buyer whose cheque floor is zero", () => {

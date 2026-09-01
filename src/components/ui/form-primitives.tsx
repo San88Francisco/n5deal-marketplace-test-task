@@ -2,7 +2,7 @@ import * as React from "react";
 import { CircleAlert, Check } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 
 /**
  * The unstyled-ish building blocks the RHF wrappers compose.

@@ -5,26 +5,30 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db";
 import { assetSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
+import { SELLER_MANAGED_STATUSES } from "@/constants";
 
 export type AssetFormState = { error?: string; fieldErrors?: Record<string, string[]> };
 
-/** Human-readable, unique, and stable once published. */
-async function uniqueSlug(title: string, excludeId?: string): Promise<string> {
-  const base =
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 70) || "listing";
+const slugify = (title: string): string =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 70) || "listing";
 
-  let candidate = base;
-  let suffix = 2;
+/**
+ * Human-readable, unique, and stable once published. Collisions append a
+ * counter; the recursion is bounded in practice by how many listings can share
+ * a title.
+ */
+async function uniqueSlug(title: string, excludeId?: string, suffix = 1): Promise<string> {
+  const base = slugify(title);
+  const candidate = suffix === 1 ? base : `${base}-${suffix}`;
 
-  for (;;) {
-    const clash = await prisma.asset.findUnique({ where: { slug: candidate } });
-    if (!clash || clash.id === excludeId) return candidate;
-    candidate = `${base}-${suffix++}`;
-  }
+  const clash = await prisma.asset.findUnique({ where: { slug: candidate } });
+  if (!clash || clash.id === excludeId) return candidate;
+
+  return uniqueSlug(title, excludeId, suffix + 1);
 }
 
 /**
@@ -42,9 +46,7 @@ export async function saveAssetAction(
   }
 
   const assetId = options.assetId || null;
-  const publish = options.publish;
-
-  let slug: string;
+  const { publish } = options;
 
   try {
     const user = await assertRole("SELLER");
@@ -60,7 +62,10 @@ export async function saveAssetAction(
         return { error: "This listing is suspended. Contact the platform team." };
       }
 
-      slug = existing.publishedAt ? existing.slug : await uniqueSlug(parsed.data.title, existing.id);
+      // A published listing keeps its slug: links to it are already in the wild.
+      const slug = existing.publishedAt
+        ? existing.slug
+        : await uniqueSlug(parsed.data.title, existing.id);
 
       await prisma.$transaction([
         prisma.assetFeature.deleteMany({ where: { assetId } }),
@@ -76,12 +81,10 @@ export async function saveAssetAction(
         }),
       ]);
     } else {
-      slug = await uniqueSlug(parsed.data.title);
-
       await prisma.asset.create({
         data: {
           ...toAssetData(parsed.data),
-          slug,
+          slug: await uniqueSlug(parsed.data.title),
           sellerId: user.id,
           status: publish ? "PUBLISHED" : "DRAFT",
           publishedAt: publish ? new Date() : null,
@@ -127,8 +130,9 @@ export async function setAssetStatusAction(formData: FormData) {
   const assetId = String(formData.get("assetId"));
   const status = String(formData.get("status"));
 
-  const allowed = ["DRAFT", "PUBLISHED", "UNDER_OFFER", "SOLD", "ARCHIVED"];
-  if (!allowed.includes(status)) return;
+  if (!SELLER_MANAGED_STATUSES.includes(status as (typeof SELLER_MANAGED_STATUSES)[number])) {
+    return;
+  }
 
   const user = await assertRole("SELLER");
   const asset = await prisma.asset.findUnique({ where: { id: assetId } });

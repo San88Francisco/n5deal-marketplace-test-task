@@ -4,6 +4,7 @@ import { smartQuerySchema } from "@/lib/validation";
 import { getTaxonomy } from "@/server/assets/queries";
 import { parseSmartQuery } from "@/server/matching/ai";
 import { getCurrentUser } from "@/server/auth/session";
+import { safeJsonParse } from "@/utils/json";
 
 /**
  * The one place this app exposes a JSON endpoint rather than a Server Action:
@@ -19,12 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "unauthorised" }, { status: 401 });
   }
 
-  let payload: unknown;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ ok: false, reason: "unparsable" }, { status: 400 });
-  }
+  const payload = safeJsonParse(await request.text());
 
   const parsed = smartQuerySchema.safeParse(payload);
   if (!parsed.success) {
