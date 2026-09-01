@@ -52,32 +52,44 @@ What replaces it is not "no backend", it is a **layered server module**:
 
 ```
 src/
-  server/      the backend: one folder per bounded context
-    auth/        session issue/verify, password hashing, guards
-    assets/      queries + mutations for listings
-    buyers/      buyer directory + profile
-    conversations/ threads between the two sides
-    moderation/  manager actions, all writing to the audit trail
-    matching/    scoring engine + AI layer
-    db.ts        Prisma singleton
-  routes/      every URL in the app, as typed helpers
-  constants/   closed sets and labels, shared by server and client
-  types/       what travels between layers
-  utils/       formatting, cn, json, url helpers
+  app/            routes only — every page delegates to components and server modules
+  server/         the backend, one folder per bounded context
+    auth/           sessions, password hashing, guards
+    assets/         listing queries and mutations
+    buyers/         buyer directory and profiles
+    conversations/  threads between the two sides
+    moderation/     manager actions, all writing to the audit trail
+    matching/       scoring engine + AI layer
+    profiles/       profile mutations
+    db.ts           Prisma singleton
+  routes/         every URL, as typed helpers
+  constants/      closed sets, labels, form and table configs
+  types/          what travels between layers
+  utils/          cn, format, json, url, array, domain predicates
+  mappers/        record → form values
+  lib/validation/ Zod schemas, one file per concept
   components/
-    rhf/         form-field wrappers over react-hook-form
-    ui/          primitives
-    <feature>/   feature components
-  lib/validation.ts  Zod schemas
+    rhf/            form-field wrappers over react-hook-form
+    ui/             primitives, one component per file
+    filters/        shared facet parts
+    <feature>/      feature components
 ```
 
-Two conventions worth naming. **No route string is written inline** — everything
-goes through `ROUTES`, so renaming a path is a compile error rather than a
-silent dead link. And **the form layer is one pattern, not per-form code**: a
-`RHFForm` provider plus field wrappers (`RHFInput`, `RHFSelect`,
+Three conventions worth naming. **No route string is written inline** — everything
+goes through `ROUTES`, so renaming a path is a compile error rather than a silent
+dead link. **No status literal is written inline either** — `USER_STATUS.ACTIVE`,
+`ASSET_STATUS.PUBLISHED` and friends come from `constants/domain.ts`, which also
+derives the tuples the Zod enums are built from, so the database, the schemas and
+the UI cannot drift apart. And **the form layer is one pattern, not per-form
+code**: a `RHFForm` provider plus field wrappers (`RHFInput`, `RHFSelect`,
 `RHFMultiSelect`, …) that all resolve their error/warning/hint state through a
-single `getFieldHelperState`, so every field in the product behaves the same
-way.
+single `getFieldHelperState`.
+
+Repeated UI is data, not markup: filter sidebars, form steps, table columns and
+match sections are declared as config arrays in `constants/` and rendered with a
+`.map()`, so adding a facet or a column is a one-line change in one place.
+
+
 
 Route Handlers and Server Actions are thin: they parse input with Zod,
 call a guard, delegate to a module, and map the result to a response. No

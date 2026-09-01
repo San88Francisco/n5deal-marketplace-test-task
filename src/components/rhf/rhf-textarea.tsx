@@ -23,7 +23,7 @@ type RHFTextareaProps<T extends FieldValues> = {
   warningText?: ReactNode;
   rules?: RegisterOptions<T, FieldPath<T>>;
   containerClassName?: string;
-  /** Shows a live character count against the schema's maximum. */
+
   maxLength?: number;
 } & Omit<
   ComponentProps<typeof Textarea>,
@@ -77,7 +77,7 @@ function RHFTextarea<T extends FieldValues>({
               ) : (
                 <span />
               )}
-              {maxLength ? (
+              {maxLength && (
                 <span
                   className={cn(
                     "tabular shrink-0 text-[12px]",
@@ -86,7 +86,7 @@ function RHFTextarea<T extends FieldValues>({
                 >
                   {length}/{maxLength}
                 </span>
-              ) : null}
+              )}
             </div>
           </div>
         );

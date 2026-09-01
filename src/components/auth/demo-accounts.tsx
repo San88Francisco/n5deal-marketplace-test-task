@@ -22,10 +22,6 @@ const ACCOUNTS = [
 
 const PASSWORD = "n5deal-demo-2026";
 
-/**
- * A reviewer should not have to read the README to get in. Clicking a row fills
- * the sign-in form, which is faster than copying two fields by hand.
- */
 export function DemoAccounts() {
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -34,7 +30,6 @@ export function DemoAccounts() {
     const passwordField = document.querySelector<HTMLInputElement>("#password");
     if (!emailField || !passwordField) return;
 
-    // Native setters so React registers the change.
     const setter = Object.getOwnPropertyDescriptor(
       window.HTMLInputElement.prototype,
       "value",

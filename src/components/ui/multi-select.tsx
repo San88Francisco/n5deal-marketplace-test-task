@@ -42,7 +42,7 @@ export function MultiSelect({
     <div
       className={cn("rounded-md border bg-white", invalid ? "border-critical-500" : "border-ink-200")}
     >
-      {searchable ? (
+      {searchable && (
         <div className="border-b border-ink-100 p-2">
           <input
             value={query}
@@ -52,7 +52,7 @@ export function MultiSelect({
             className="w-full rounded border border-ink-200 px-2 py-1 text-[13px] placeholder:text-ink-300 focus:border-navy-600 focus:outline-none"
           />
         </div>
-      ) : null}
+      )}
 
       {visible.length ? (
         <ul
@@ -78,7 +78,7 @@ export function MultiSelect({
                       active ? "border-navy-900 bg-navy-900 text-white" : "border-ink-300 bg-white",
                     )}
                   >
-                    {active ? <Check className="h-3 w-3" aria-hidden /> : null}
+                    {active && <Check className="h-3 w-3" aria-hidden />}
                   </span>
 
                   <input
@@ -97,11 +97,11 @@ export function MultiSelect({
         <p className="p-3 text-[13px] text-ink-300">{emptyLabel}</p>
       )}
 
-      {value.length ? (
+      {value.length > 0 && (
         <p className="border-t border-ink-100 px-3 py-1.5 text-[12px] text-ink-500">
           {value.length} selected
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -63,15 +63,9 @@ function RHFInput<T extends FieldValues>({
             <div className="flex items-center gap-2">
               <Input
                 {...field}
-                // A number input bound to `null` would warn about switching
-                // between controlled and uncontrolled; empty string is the
-                // correct "no value yet" for the DOM.
+
                 value={field.value ?? ""}
-                // The DOM always hands back a string. The schemas expect real
-                // numbers (and `null` for "not disclosed"), so the conversion
-                // belongs here rather than in every schema as a coercion —
-                // coercion would make the form's input type diverge from the
-                // action's output type.
+
                 onChange={
                   inputProps.type === "number"
                     ? (event) => {

@@ -3,11 +3,6 @@ import type { ControllerFieldState } from "react-hook-form";
 
 import { HelperText } from "@/components/ui/helper-text";
 
-/**
- * One rule for what a field shows underneath itself: an error wins over a
- * warning, a warning wins over the neutral hint, and nothing renders when there
- * is nothing to say. Keeping it here means every RHF field behaves identically.
- */
 export const getFieldHelperState = (
   fieldState: ControllerFieldState,
   helperText?: ReactNode,

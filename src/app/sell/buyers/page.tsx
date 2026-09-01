@@ -8,7 +8,7 @@ import { BuyerFilters } from "@/components/buyers/buyer-filters";
 import { AssetPicker } from "@/components/buyers/asset-picker";
 import { Pagination } from "@/components/ui/pagination";
 import { SortSelect } from "@/components/ui/sort-select";
-import { ASSET_STATUS, BUSINESS_TYPES, INVESTOR_TYPES, TIMELINES } from "@/constants";
+import { ASSET_STATUS } from "@/constants";
 import { buyerFilterSchema } from "@/lib/validation";
 import { requireSeller } from "@/server/auth/guards";
 import { getSellerAssets, getTaxonomy } from "@/server/assets/queries";
@@ -35,9 +35,6 @@ export default async function BuyerDirectoryPage({
 
   const [assets, taxonomy] = await Promise.all([getSellerAssets(user.id), getTaxonomy()]);
 
-  // "Browse buyers" in the abstract is not a real task — a seller always browses
-  // buyers *for* something. Picking a listing switches the directory into
-  // ranked mode against that asset's actual attributes.
   const selectedAsset = filters.forAssetId
     ? assets.find((asset) => asset.id === filters.forAssetId)
     : undefined;
@@ -96,9 +93,6 @@ export default async function BuyerDirectoryPage({
           <BuyerFilters
             jurisdictions={taxonomy.jurisdictions}
             categories={taxonomy.categories}
-            businessTypes={BUSINESS_TYPES}
-            investorTypes={INVESTOR_TYPES}
-            timelines={TIMELINES}
           />
         </Suspense>
 

@@ -17,11 +17,6 @@ const slugify = (title: string): string =>
     .replace(/^-|-$/g, "")
     .slice(0, 70) || "listing";
 
-/**
- * Human-readable, unique, and stable once published. Collisions append a
- * counter; the recursion is bounded in practice by how many listings can share
- * a title.
- */
 async function uniqueSlug(title: string, excludeId?: string, suffix = 1): Promise<string> {
   const base = slugify(title);
   const candidate = suffix === 1 ? base : `${base}-${suffix}`;
@@ -32,10 +27,6 @@ async function uniqueSlug(title: string, excludeId?: string, suffix = 1): Promis
   return uniqueSlug(title, excludeId, suffix + 1);
 }
 
-/**
- * Takes the react-hook-form value directly. `publish` is an intent rather than
- * a field: the same form both saves a work-in-progress and publishes it.
- */
 export async function saveAssetAction(
   input: unknown,
   options: { assetId?: string | null; publish: boolean },
@@ -57,13 +48,11 @@ export async function saveAssetAction(
       if (!existing || existing.sellerId !== user.id) {
         throw new AuthorizationError("That listing is not yours");
       }
-      // A suspended listing cannot be edited back into visibility by its owner;
-      // only a platform manager can reinstate it.
+
       if (existing.status === USER_STATUS.SUSPENDED) {
         return { error: "This listing is suspended. Contact the platform team." };
       }
 
-      // A published listing keeps its slug: links to it are already in the wild.
       const slug = existing.publishedAt
         ? existing.slug
         : await uniqueSlug(parsed.data.title, existing.id);
@@ -126,7 +115,6 @@ function toAssetData(input: ReturnType<typeof assetSchema.parse>) {
   };
 }
 
-/** Sellers control their own listing lifecycle, except suspension. */
 export async function setAssetStatusAction(formData: FormData) {
   const assetId = String(formData.get("assetId"));
   const status = String(formData.get("status"));

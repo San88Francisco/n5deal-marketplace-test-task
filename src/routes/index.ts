@@ -1,11 +1,3 @@
-/**
- * Every URL in the application, in one place.
- *
- * Paths written inline drift: a route gets renamed and three `href`s in unrelated
- * components keep pointing at the old one, with nothing to catch it. Going
- * through these helpers makes a rename a compile error instead.
- */
-
 const withQuery = (path: string, query?: Record<string, string | number | undefined>) => {
   if (!query) return path;
 
@@ -73,7 +65,6 @@ export const ROUTES = {
   },
 } as const;
 
-/** Where each role belongs after signing in. */
 export const landingFor = (role: string): string =>
   ({
     SELLER: ROUTES.seller.listings,
@@ -81,5 +72,4 @@ export const landingFor = (role: string): string =>
     BUYER: ROUTES.assets.index,
   })[role] ?? ROUTES.assets.index;
 
-/** Route prefixes the middleware guards with a cookie-presence check. */
 export const PRIVATE_ROUTE_PREFIXES = ["/account", "/sell", "/manage", "/messages"] as const;

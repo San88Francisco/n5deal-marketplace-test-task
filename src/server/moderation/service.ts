@@ -10,16 +10,6 @@ import { ADMIN_PAGE_SIZE, ASSET_STATUS, MODERATION_ACTION, USER_ROLE, USER_STATU
 
 export const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
-/**
- * Every manager action goes through this one function so that three invariants
- * hold without depending on the caller remembering them:
- *
- *   1. the state change and the audit record are written in one transaction —
- *      an action that is not recorded did not happen;
- *   2. suspending or removing a participant destroys their sessions, so the
- *      block is immediate rather than eventual;
- *   3. managers cannot act on themselves or on each other.
- */
 export async function applyModeration(actorId: string, input: ModerationInput) {
   const actor = await prisma.user.findUnique({ where: { id: actorId } });
   if (!actor || actor.role !== USER_ROLE.PLATFORM_MANAGER) {
@@ -38,8 +28,6 @@ export async function applyModeration(actorId: string, input: ModerationInput) {
       throw new AuthorizationError("You cannot moderate your own account");
     }
     if (target.role === USER_ROLE.PLATFORM_MANAGER) {
-      // Managers are peers; removing one another is an admin operation, not a
-      // marketplace moderation action.
       throw new AuthorizationError("Platform managers cannot moderate each other");
     }
 
@@ -70,8 +58,7 @@ export async function applyModeration(actorId: string, input: ModerationInput) {
             data: { status: USER_STATUS.REMOVED, statusReason: input.reason },
           }),
           prisma.session.deleteMany({ where: { userId: target.id } }),
-          // Their listings leave the marketplace with them, but are archived
-          // rather than deleted so the deal history survives.
+
           prisma.asset.updateMany({
             where: { sellerId: target.id, status: { notIn: [ASSET_STATUS.SOLD, ASSET_STATUS.ARCHIVED] } },
             data: { status: ASSET_STATUS.ARCHIVED },

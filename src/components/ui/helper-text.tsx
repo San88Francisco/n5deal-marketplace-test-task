@@ -26,7 +26,7 @@ export function HelperText({ className, variant = "default", children, ...props 
       data-error-msg={variant === "error"}
       {...props}
     >
-      {showsIcon ? <CircleAlert aria-hidden className="mt-[1px] h-3.5 w-3.5 shrink-0" /> : null}
+      {showsIcon && <CircleAlert aria-hidden className="mt-[1px] h-3.5 w-3.5 shrink-0" />}
       <span>{children}</span>
     </p>
   );

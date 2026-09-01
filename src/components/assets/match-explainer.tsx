@@ -3,12 +3,6 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 
-/**
- * On-demand rather than automatic: the explanation costs an API call, and most
- * buyers only want it for the two or three listings they are seriously weighing.
- * The deterministic factor breakdown above it is always visible, so this only
- * ever adds context — it never replaces the reasoning.
- */
 export function MatchExplainer({ assetId }: { assetId: string }) {
   const [state, setState] = useState<
     { status: "idle" } | { status: "loading" } | { status: "done"; text: string } | { status: "error" }

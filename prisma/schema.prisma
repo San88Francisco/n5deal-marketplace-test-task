@@ -1,14 +1,3 @@
-// N5Deal marketplace — data model
-//
-// Design notes (full reasoning in docs/ARCHITECTURE.md):
-// - MySQL has no scalar arrays, so every many-valued attribute is a real join
-//   table. That is not a workaround: jurisdictions and licence categories are
-//   the primary filter axes of this marketplace, so they must be indexable.
-// - Jurisdiction / LicenceCategory are reference tables rather than enums,
-//   because the platform operates in 30+ jurisdictions and that list must
-//   change without a schema migration.
-// - Money is DECIMAL(18,2), never Float.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,21 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ---------------------------------------------------------------------------
-// Identity & access
-// ---------------------------------------------------------------------------
-
 enum UserRole {
   BUYER
   SELLER
   PLATFORM_MANAGER
 }
 
-/// ACTIVE    — normal access.
-/// SUSPENDED — kept in the database, blocked from signing in, hidden from the
-///             marketplace. Reversible by a platform manager.
-/// REMOVED   — soft delete. The row survives so conversations and the audit
-///             trail stay referentially intact; nothing is exposed publicly.
 enum UserStatus {
   ACTIVE
   SUSPENDED
@@ -65,10 +45,6 @@ model User {
   @@map("users")
 }
 
-/// Server-side sessions, deliberately not JWT.
-/// A platform manager must be able to suspend a participant and have that take
-/// effect immediately; a stateless token would stay valid until it expired.
-/// Only the SHA-256 hash of the cookie value is stored.
 model Session {
   id        String   @id @default(cuid())
   tokenHash String   @unique
@@ -84,14 +60,10 @@ model Session {
   @@map("sessions")
 }
 
-// ---------------------------------------------------------------------------
-// Reference data (the marketplace taxonomy)
-// ---------------------------------------------------------------------------
-
 model Jurisdiction {
-  code   String @id @db.VarChar(8) // ISO 3166-1 alpha-2, e.g. LT, MT, SG
+  code   String @id @db.VarChar(8)
   name   String
-  region String // EU, EEA, UK, APAC, LATAM, MENA, NORTH_AMERICA, OFFSHORE
+  region String
 
   assets         Asset[]
   buyerTargets   BuyerTargetJurisdiction[]
@@ -102,7 +74,7 @@ model Jurisdiction {
 }
 
 model LicenceCategory {
-  code        String  @id @db.VarChar(32) // EMI, PI, CASP, BANK, SPI, MTL...
+  code        String  @id @db.VarChar(32)
   name        String
   description String? @db.Text
 
@@ -111,10 +83,6 @@ model LicenceCategory {
 
   @@map("licence_categories")
 }
-
-// ---------------------------------------------------------------------------
-// Buyer side
-// ---------------------------------------------------------------------------
 
 enum InvestorType {
   STRATEGIC
@@ -127,10 +95,10 @@ enum InvestorType {
 }
 
 enum AcquisitionTimeline {
-  IMMEDIATE // under 3 months
-  SHORT     // 3-6 months
-  MEDIUM    // 6-12 months
-  EXPLORING // no fixed horizon
+  IMMEDIATE
+  SHORT
+  MEDIUM
+  EXPLORING
 }
 
 model BuyerProfile {
@@ -144,16 +112,13 @@ model BuyerProfile {
   country      String  @db.VarChar(8)
   investorType InvestorType
 
-  /// Cheque size the buyer is willing to write, in EUR.
   ticketMinEur Decimal @db.Decimal(18, 2)
   ticketMaxEur Decimal @db.Decimal(18, 2)
 
   timeline           AcquisitionTimeline @default(EXPLORING)
-  wantsOperatingOnly Boolean             @default(false) // skip dormant licences
+  wantsOperatingOnly Boolean             @default(false)
   proofOfFundsReady  Boolean             @default(false)
-  /// Free-text investment thesis. Feeds the AI matching prompt.
   investmentThesis   String?             @db.Text
-  /// Controls visibility in the seller-facing buyer directory.
   isPublished        Boolean             @default(true)
 
   createdAt DateTime @default(now())
@@ -204,10 +169,6 @@ model BuyerTargetBusinessType {
   @@map("buyer_target_business_types")
 }
 
-// ---------------------------------------------------------------------------
-// Seller side
-// ---------------------------------------------------------------------------
-
 enum SellerType {
   OWNER
   BROKER
@@ -224,7 +185,6 @@ model SellerProfile {
   websiteUrl  String?
   country     String     @db.VarChar(8)
   sellerType  SellerType
-  /// Set by a platform manager after KYC. Rendered as a badge.
   isVerified  Boolean    @default(false)
 
   createdAt DateTime @default(now())
@@ -248,30 +208,21 @@ model SellerJurisdiction {
   @@map("seller_jurisdictions")
 }
 
-// ---------------------------------------------------------------------------
-// Assets (the listings)
-// ---------------------------------------------------------------------------
-
 enum AssetStatus {
   DRAFT
   PUBLISHED
   UNDER_OFFER
   SOLD
-  /// Taken down by a platform manager; the seller still sees it, nobody else does.
   SUSPENDED
   ARCHIVED
 }
 
-/// Mirrors how N5Deal itself labels a listing: a licence that is live and
-/// trading, one still in application, or a clean shell sold as "licence only".
 enum LicenceStatus {
   ACTIVE
   IN_APPLICATION
   DORMANT
 }
 
-/// The business axis, orthogonal to the licence category. N5Deal filters on
-/// both — a CASP licence can belong to a crypto exchange or to a payments group.
 enum BusinessType {
   PAYMENT
   FINTECH
@@ -282,9 +233,6 @@ enum BusinessType {
   OTHER
 }
 
-/// What comes with the company. On N5Deal these are the "included" chips on a
-/// listing card, and they are a filter axis, hence a join table rather than a
-/// JSON blob.
 enum AssetFeatureCode {
   STAFF
   OFFICE
@@ -298,8 +246,6 @@ enum AssetFeatureCode {
 
 model Asset {
   id String @id @default(cuid())
-  /// Public, human-quotable number — listings are referenced as "#750" in
-  /// conversations with brokers, so it has to be short and stable.
   referenceCode Int    @unique @default(autoincrement())
   slug          String @unique
   sellerId      String
@@ -312,22 +258,20 @@ model Asset {
   categoryCode     String       @db.VarChar(32)
   businessType     BusinessType
 
-  askingPriceEur Decimal? @db.Decimal(18, 2) // null means price on request
+  askingPriceEur Decimal? @db.Decimal(18, 2)
   revenueEur     Decimal? @db.Decimal(18, 2)
   ebitdaEur      Decimal? @db.Decimal(18, 2)
 
   licenceStatus     LicenceStatus
-  /// Supervisory authority, e.g. FCA, CySEC, BoL, MFSA.
   regulator         String? @db.VarChar(120)
   licenceIssuedYear Int?
   yearEstablished   Int?
   employees         Int?
   activeClients     Int?
-  hasPassporting    Boolean @default(false) // EU/EEA passporting rights
+  hasPassporting    Boolean @default(false)
   reasonForSale     String? @db.Text
 
   status AssetStatus @default(DRAFT)
-  /// Due diligence confirmed by a platform manager — the "Validated" badge.
   isValidated Boolean   @default(false)
   publishedAt DateTime?
   viewCount   Int       @default(0)
@@ -363,7 +307,6 @@ model AssetFeature {
   @@map("asset_features")
 }
 
-/// Buyer watchlist. Also drives the favourite counter on the listing card.
 model Favourite {
   userId    String
   assetId   String
@@ -377,16 +320,10 @@ model Favourite {
   @@map("favourites")
 }
 
-// ---------------------------------------------------------------------------
-// Contact between participants
-// ---------------------------------------------------------------------------
-
 model Conversation {
   id       String  @id @default(cuid())
   buyerId  String
   sellerId String
-  /// Null when a seller reached out to a buyer from the buyer directory
-  /// rather than about one specific listing.
   assetId  String?
 
   subject       String   @db.VarChar(200)
@@ -398,8 +335,6 @@ model Conversation {
   asset    Asset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
   messages Message[]
 
-  /// One thread per buyer/seller/asset triple — re-contacting reuses the thread
-  /// instead of spawning duplicates.
   @@unique([buyerId, sellerId, assetId])
   @@index([buyerId, lastMessageAt])
   @@index([sellerId, lastMessageAt])
@@ -421,10 +356,6 @@ model Message {
   @@map("messages")
 }
 
-// ---------------------------------------------------------------------------
-// Moderation audit trail
-// ---------------------------------------------------------------------------
-
 enum ModerationActionType {
   USER_SUSPEND
   USER_REINSTATE
@@ -434,8 +365,6 @@ enum ModerationActionType {
   SELLER_VERIFY
 }
 
-/// Append-only. Nothing is ever hard-deleted, so the platform can always answer
-/// who removed a participant, when, and why.
 model ModerationAction {
   id            String               @id @default(cuid())
   actorId       String

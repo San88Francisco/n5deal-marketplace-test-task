@@ -7,7 +7,7 @@ import { AssetFilters } from "@/components/assets/asset-filters";
 import { SmartSearch } from "@/components/assets/smart-search";
 import { Pagination } from "@/components/ui/pagination";
 import { SortSelect } from "@/components/ui/sort-select";
-import { ASSET_FEATURES, BUSINESS_TYPES, LICENCE_STATUSES, USER_ROLE } from "@/constants";
+import { USER_ROLE } from "@/constants";
 import { assetFilterSchema } from "@/lib/validation";
 import { getActiveFacets, getTaxonomy, searchAssets } from "@/server/assets/queries";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
@@ -29,7 +29,7 @@ export default async function AssetsPage({
 }) {
   const raw = await searchParams;
   const parsed = assetFilterSchema.safeParse(raw);
-  // A malformed URL should show the default listing page, not an error screen.
+
   const filters = parsed.success ? parsed.data : assetFilterSchema.parse({});
 
   const user = await getCurrentUser();
@@ -73,7 +73,7 @@ export default async function AssetsPage({
         </Suspense>
       </div>
 
-      {!buyerProfile && user?.role === USER_ROLE.BUYER ? (
+      {!buyerProfile && user?.role === USER_ROLE.BUYER && (
         <div className="mt-6 rounded-card border border-accent-300/50 bg-accent-50 p-4">
           <p className="text-[14px] font-medium text-accent-700">
             Set up your mandate to see match scores
@@ -86,7 +86,7 @@ export default async function AssetsPage({
             </Link>
           </p>
         </div>
-      ) : null}
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
         <Suspense fallback={<div className="h-96 rounded-card bg-ink-100" />}>

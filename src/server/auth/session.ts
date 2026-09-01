@@ -11,12 +11,6 @@ import { BCRYPT_ROUNDS, SESSION_TTL_DAYS, USER_STATUS } from "@/constants";
 
 export { SESSION_COOKIE };
 
-/**
- * The cookie carries a raw 256-bit token; the database stores only its SHA-256
- * digest. A dump of the sessions table therefore cannot be replayed as a login.
- * SHA-256 (not bcrypt) is correct here: the token is already high-entropy, so
- * there is nothing to brute-force, and session lookup must stay cheap.
- */
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -29,7 +23,6 @@ export function verifyPassword(password: string, hash: string): Promise<boolean>
   return bcrypt.compare(password, hash);
 }
 
-/** Constant-time compare, used where a secret is checked outside bcrypt. */
 export function safeEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
@@ -60,7 +53,6 @@ export async function destroySession(): Promise<void> {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
   if (token) {
-    // deleteMany, not delete: a stale cookie must not throw on sign-out.
     await prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } });
   }
 
@@ -69,20 +61,10 @@ export async function destroySession(): Promise<void> {
 
 export type AuthState =
   | { status: "anonymous" }
-  /** Signed in, but suspended by a platform manager. Kept distinct from
-   *  anonymous so the UI can explain *why* access stopped instead of silently
-   *  bouncing the person back to the login form. */
+
   | { status: "suspended"; user: User }
   | { status: "active"; user: User };
 
-/**
- * Resolves the current auth state from the session cookie.
- *
- * The user's status is re-read from the database on every call. That is the
- * whole reason this app uses server-side sessions instead of a JWT: when a
- * platform manager suspends someone, the block applies on that person's very
- * next request rather than whenever their token would have expired.
- */
 export async function getAuthState(): Promise<AuthState> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
@@ -101,7 +83,6 @@ export async function getAuthState(): Promise<AuthState> {
   }
 
   if (session.user.status === USER_STATUS.REMOVED) {
-    // Terminal: the account is gone, so every session it holds goes with it.
     await prisma.session.deleteMany({ where: { userId: session.userId } });
     return { status: "anonymous" };
   }
@@ -113,7 +94,6 @@ export async function getAuthState(): Promise<AuthState> {
   return { status: "active", user: session.user };
 }
 
-/** Convenience wrapper: the signed-in, non-suspended user, or null. */
 export async function getCurrentUser(): Promise<User | null> {
   const state = await getAuthState();
   return state.status === "active" ? state.user : null;

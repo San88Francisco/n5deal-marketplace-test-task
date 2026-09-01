@@ -57,16 +57,16 @@ export function SellerProfileForm({
 
   return (
     <RHFForm form={form} onSubmit={onSubmit} className="space-y-8">
-      {serverError ? (
+      {serverError && (
         <p className="rounded-md border border-critical-500/25 bg-critical-50 px-3 py-2 text-[13px] text-critical-700">
           {serverError}
         </p>
-      ) : null}
-      {saved ? (
+      )}
+      {saved && (
         <p className="rounded-md border border-positive-500/25 bg-positive-50 px-3 py-2 text-[13px] text-positive-700">
           Company profile saved.
         </p>
-      ) : null}
+      )}
 
       <section className="card p-6">
         <h2 className="text-[15px] font-semibold text-ink-900">Your company</h2>

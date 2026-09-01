@@ -30,11 +30,6 @@ type RHFMultiSelectProps<T extends FieldValues> = {
   emptyLabel?: string;
 };
 
-/**
- * Backs the mandate fields — jurisdictions, licence categories, business types,
- * asset features. The value is always a string array, which is exactly what the
- * Zod schema and the join tables expect.
- */
 function RHFMultiSelect<T extends FieldValues>({
   name,
   label,

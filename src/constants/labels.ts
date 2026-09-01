@@ -1,8 +1,3 @@
-/**
- * Enum value → human copy. Single source, so a status reads identically on a
- * card, in a table and in an audit entry.
- */
-
 export const LICENCE_STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Operating",
   IN_APPLICATION: "In application",
@@ -31,7 +26,6 @@ export const TIMELINE_LABEL: Record<string, string> = {
   EXPLORING: "Exploring",
 };
 
-/** Longer form, used where the field is being chosen rather than read back. */
 export const TIMELINE_OPTION_LABEL: Record<string, string> = {
   IMMEDIATE: "Immediate — under 3 months",
   SHORT: "3–6 months",

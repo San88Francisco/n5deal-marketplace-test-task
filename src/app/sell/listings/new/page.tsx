@@ -28,8 +28,6 @@ export default async function NewListingPage() {
       <div className="mt-8">
         <AssetForm
           jurisdictions={
-            // A seller can only list where they say they operate, unless they
-            // listed nowhere — then the full taxonomy is offered.
             profile.operatesIn.length
               ? profile.operatesIn.map((row) => row.jurisdiction)
               : taxonomy.jurisdictions

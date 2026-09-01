@@ -5,15 +5,6 @@ import { AuthorizationError } from "@/server/auth/guards";
 import { ASSET_STATUS, USER_ROLE, USER_STATUS } from "@/constants";
 import type { ContactableRole } from "@/types";
 
-/**
- * Contact between the two sides.
- *
- * The rule that shapes this module: a thread is identified by
- * (buyer, seller, asset), enforced by a unique constraint in the schema.
- * "Contact seller" pressed twice must land in the existing conversation, not
- * create a duplicate — an M&A inbox that fragments is worse than no inbox.
- */
-
 export async function startConversation(params: {
   actorId: string;
   actorRole: ContactableRole;
@@ -33,8 +24,6 @@ export async function startConversation(params: {
   if (!buyer || buyer.role !== USER_ROLE.BUYER) throw new AuthorizationError("Buyer not found");
   if (!seller || seller.role !== USER_ROLE.SELLER) throw new AuthorizationError("Seller not found");
 
-  // You cannot open a thread with someone who is suspended or removed. Existing
-  // threads survive (see getConversation) but new contact is blocked.
   if (buyer.status !== USER_STATUS.ACTIVE || seller.status !== USER_STATUS.ACTIVE) {
     throw new AuthorizationError("That participant is not available");
   }
@@ -46,8 +35,6 @@ export async function startConversation(params: {
       select: { id: true, sellerId: true, status: true },
     });
 
-    // Silently drop a stale or foreign asset reference rather than failing the
-    // whole message — the conversation itself is still valid.
     if (!asset || asset.sellerId !== sellerId || asset.status === ASSET_STATUS.SUSPENDED) {
       assetId = null;
     }
@@ -103,8 +90,6 @@ export async function replyToConversation(params: {
     conversation.buyerId === params.actorId || conversation.sellerId === params.actorId;
   if (!isParticipant) throw new AuthorizationError("Not your conversation");
 
-  // A thread with a suspended or removed counterparty becomes read-only. The
-  // history stays visible; sending into the void does not.
   const counterparty =
     conversation.buyerId === params.actorId ? conversation.seller : conversation.buyer;
   if (counterparty.status !== USER_STATUS.ACTIVE) {
@@ -150,7 +135,6 @@ export async function getConversation(conversationId: string, userId: string) {
   if (!conversation) return null;
   if (conversation.buyerId !== userId && conversation.sellerId !== userId) return null;
 
-  // Mark the counterparty's messages as read on open.
   await prisma.message.updateMany({
     where: { conversationId, senderId: { not: userId }, readAt: null },
     data: { readAt: new Date() },

@@ -7,11 +7,6 @@ import { TIMELINE_LABEL } from "@/constants";
 import { flagEmoji, formatMoneyShort, humanise } from "@/utils/format";
 import type { BuyerListItem } from "@/server/buyers/queries";
 
-/**
- * A buyer in the seller-facing directory. The card leads with the mandate —
- * jurisdictions, licence types, cheque size — because that is what tells a
- * seller whether the conversation is worth starting.
- */
 export function BuyerCard({
   buyer,
   canContact,
@@ -38,19 +33,19 @@ export function BuyerCard({
             {humanise(buyer.investorType)} · {flagEmoji(buyer.country)} {buyer.country}
           </p>
         </div>
-        {buyer.proofOfFundsReady ? (
+        {buyer.proofOfFundsReady && (
           <Badge tone="positive" className="ml-auto shrink-0" title="Proof of funds confirmed">
             <ShieldCheck className="h-3 w-3" aria-hidden />
             PoF
           </Badge>
-        ) : null}
+        )}
       </div>
 
       <p className="mt-3 line-clamp-2 text-[13.5px] leading-relaxed text-ink-700">
         {buyer.headline}
       </p>
 
-      {buyer.match ? (
+      {buyer.match && (
         <div className="mt-3">
           <MatchBadge
             score={buyer.match.score}
@@ -60,11 +55,11 @@ export function BuyerCard({
                 : "Scored against the selected listing"
             }
           />
-          {buyer.match.concerns.length ? (
+          {buyer.match.concerns.length > 0 && (
             <p className="mt-1.5 text-[12px] text-caution-700">{buyer.match.concerns[0]}</p>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
 
       <dl className="mt-4 space-y-2 border-t border-ink-100 pt-4 text-[13px]">
         <div className="flex justify-between gap-3">
@@ -79,12 +74,12 @@ export function BuyerCard({
             {TIMELINE_LABEL[buyer.timeline] ?? humanise(buyer.timeline)}
           </dd>
         </div>
-        {buyer.wantsOperatingOnly ? (
+        {buyer.wantsOperatingOnly && (
           <div className="flex justify-between gap-3">
             <dt className="text-ink-500">Requires</dt>
             <dd className="text-right font-medium text-ink-900">Operating business</dd>
           </div>
-        ) : null}
+        )}
       </dl>
 
       <div className="mt-3 flex flex-wrap gap-1">
@@ -93,9 +88,9 @@ export function BuyerCard({
             {flagEmoji(jurisdiction.code)} {jurisdiction.code}
           </Badge>
         ))}
-        {jurisdictions.length > 4 ? (
+        {jurisdictions.length > 4 && (
           <Badge tone="neutral">+{jurisdictions.length - 4}</Badge>
-        ) : null}
+        )}
       </div>
 
       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -104,10 +99,10 @@ export function BuyerCard({
             {category.code}
           </Badge>
         ))}
-        {categories.length > 4 ? <Badge tone="neutral">+{categories.length - 4}</Badge> : null}
+        {categories.length > 4 && <Badge tone="neutral">+{categories.length - 4}</Badge>}
       </div>
 
-      {canContact ? (
+      {canContact && (
         <div className="mt-5">
           <ContactDialog
             counterpartyId={buyer.userId}
@@ -123,7 +118,7 @@ export function BuyerCard({
             }
           />
         </div>
-      ) : null}
+      )}
     </article>
   );
 }

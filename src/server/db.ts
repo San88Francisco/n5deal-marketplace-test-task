@@ -1,8 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 
-// Next.js dev mode re-evaluates modules on every hot reload; without the global
-// cache each reload would open a new MySQL connection pool until the server
-// runs out of connections.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 export const prisma =

@@ -7,23 +7,8 @@ import { BUSINESS_TYPES, LICENCE_STATUSES } from "@/constants";
 import { safeJsonParse } from "@/utils/json";
 import type { MatchResult } from "@/server/matching/score";
 
-/**
- * The AI layer, backed by Gemini.
- *
- * Design rule: the model does language, never arithmetic. It turns a sentence
- * into a filter object and writes a rationale for a score computed elsewhere.
- * Ranking stays in ./score.ts where it is deterministic and unit-tested.
- *
- * Every function here degrades to a usable result when GEMINI_API_KEY is absent
- * or the call fails, because a demo that dies without a key is not a demo.
- */
-
 const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
 
-/**
- * The client is built once per process. A container object keeps the cache a
- * `const` while still allowing the lazy first construction.
- */
 const clientCache: { current?: GoogleGenAI | null } = {};
 
 function getClient(): GoogleGenAI | null {
@@ -39,12 +24,6 @@ export function isAiEnabled(): boolean {
   return getClient() !== null;
 }
 
-/**
- * Gemini returns 503 when the model is momentarily saturated and 429 when the
- * key is rate-limited. Both are transient and both are common enough on a free
- * key that one short retry turns most of them into a success. Anything else
- * fails straight through to the caller's deterministic fallback.
- */
 async function withRetry<T>(call: () => Promise<T>): Promise<T> {
   try {
     return await call();
@@ -57,16 +36,6 @@ async function withRetry<T>(call: () => Promise<T>): Promise<T> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Natural-language filtering
-// ---------------------------------------------------------------------------
-
-/**
- * The model's output is validated against this before it reaches the database.
- * A hallucinated jurisdiction code or an invented field is dropped here rather
- * than turned into a query. `responseSchema` makes malformed JSON unlikely;
- * this makes it harmless.
- */
 const parsedQuerySchema = z.object({
   jurisdictions: z.array(z.string().max(8)).max(20).default([]),
   categories: z.array(z.string().max(32)).max(20).default([]),
@@ -122,8 +91,7 @@ export async function parseSmartQuery(
             `Jurisdiction codes: ${jurisdictionList}`,
             `Licence category codes: ${categoryList}`,
           ].join("\n"),
-          // Structured output: the model returns JSON matching this shape rather
-          // than prose we would have to scrape.
+
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -167,7 +135,6 @@ export async function parseSmartQuery(
     const parsed = parsedQuerySchema.safeParse(safeJsonParse(text));
     if (!parsed.success) return { ok: false, reason: "unparsable" };
 
-    // Drop any code the model invented despite the instruction.
     const validJurisdictions = new Set(
       taxonomy.jurisdictions.map((j) => j.code),
     );
@@ -191,10 +158,6 @@ export async function parseSmartQuery(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Match rationale
-// ---------------------------------------------------------------------------
-
 export type MatchBrief = {
   assetTitle: string;
   jurisdiction: string;
@@ -204,12 +167,6 @@ export type MatchBrief = {
   summary: string;
 };
 
-/**
- * Writes two or three sentences explaining a score the scoring engine already
- * produced, using the buyer's own thesis text — the part a rules engine cannot
- * read. Returns null rather than throwing when AI is unavailable; callers show
- * the deterministic factor breakdown instead.
- */
 export async function explainMatch(params: {
   thesis: string;
   match: MatchResult;

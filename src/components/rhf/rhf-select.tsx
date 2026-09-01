@@ -59,8 +59,6 @@ function RHFSelect<T extends FieldValues>({
           warningText,
         );
 
-        // A stored value that is no longer in the option list (a jurisdiction
-        // that was retired, say) must not silently select the first option.
         const valueInOptions = options.some((option) => option.value === field.value);
         const selectValue = valueInOptions ? field.value : "";
 

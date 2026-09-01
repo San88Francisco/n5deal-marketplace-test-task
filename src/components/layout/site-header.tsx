@@ -9,8 +9,6 @@ import { USER_ROLE } from "@/constants";
 
 type NavItem = { href: string; label: string };
 
-/** Navigation is role-scoped: a buyer never sees a link into the seller area,
- *  which keeps the product legible and the permission model obvious. */
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
   BUYER: [
     { href: ROUTES.assets.index, label: "All listings" },
@@ -60,11 +58,11 @@ export async function SiteHeader() {
               className="relative rounded px-3 py-2 text-[13.5px] text-ink-200 transition-colors hover:bg-navy-900 hover:text-white"
             >
               {item.label}
-              {item.href === ROUTES.messages.index && unread > 0 ? (
+              {item.href === ROUTES.messages.index && unread > 0 && (
                 <span className="ml-1.5 rounded-full bg-accent-500 px-1.5 py-0.5 text-[10.5px] font-semibold text-navy-950">
                   {unread}
                 </span>
-              ) : null}
+              )}
             </Link>
           ))}
         </nav>
@@ -102,8 +100,6 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile nav: the same links, scrolled horizontally rather than hidden
-          behind a menu — these are the product's only five destinations. */}
       <div className="border-t border-navy-800 md:hidden">
         <nav className="container-page flex gap-1 overflow-x-auto py-2">
           {nav.map((item) => (

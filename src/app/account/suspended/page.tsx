@@ -8,11 +8,6 @@ import { ROUTES } from "@/routes";
 
 export const metadata: Metadata = { title: "Account suspended" };
 
-/**
- * A suspended participant keeps a valid session but loses access everywhere
- * else. Telling them why — and by whom — is the difference between moderation
- * and a mysterious outage.
- */
 export default async function SuspendedPage() {
   const state = await getAuthState();
   if (state.status !== "suspended") redirect(ROUTES.home);
@@ -29,14 +24,14 @@ export default async function SuspendedPage() {
           marketplace, and existing conversations are read-only until the review closes.
         </p>
 
-        {state.user.statusReason ? (
+        {state.user.statusReason && (
           <div className="mt-5 rounded-md border border-caution-500/25 bg-caution-50 p-4">
             <p className="text-[12px] font-semibold uppercase tracking-wider text-caution-700">
               Reason given
             </p>
             <p className="mt-1 text-[14px] leading-relaxed text-ink-900">{state.user.statusReason}</p>
           </div>
-        ) : null}
+        )}
 
         <p className="mt-5 text-[13px] text-ink-500">
           If you believe this is a mistake, reply to the platform team from the email address on

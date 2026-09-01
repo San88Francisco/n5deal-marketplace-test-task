@@ -21,8 +21,6 @@ export type BuyerListItem = Prisma.BuyerProfileGetPayload<{ include: typeof buye
   match?: MatchResult;
 };
 
-/** A buyer is visible to sellers only if they published the profile *and* their
- *  account is in good standing. */
 const PUBLIC_BUYER_WHERE: Prisma.BuyerProfileWhereInput = {
   isPublished: true,
   user: { status: USER_STATUS.ACTIVE },
@@ -67,8 +65,6 @@ export function buildBuyerWhere(filters: BuyerFilters): Prisma.BuyerProfileWhere
     and.push({ proofOfFundsReady: true });
   }
   if (filters.ticketMin != null) {
-    // "Show buyers who could write at least this cheque" — compare against their
-    // ceiling, not their floor.
     and.push({ ticketMaxEur: { gte: filters.ticketMin } });
   }
 
@@ -91,8 +87,6 @@ export async function searchBuyers(
   const where = buildBuyerWhere(filters);
   const wantsMatchSort = filters.sort === "match" && options.asset;
 
-  // See the note in assets/queries.ts: ranking by score cannot happen in SQL, so
-  // a match-sorted page is cut after scoring.
   const pagination: { skip?: number; take: number } = wantsMatchSort
     ? { take: MATCH_SORT_SCAN_LIMIT }
     : { skip: (filters.page - 1) * PAGE_SIZE, take: PAGE_SIZE };
@@ -151,7 +145,6 @@ export async function getSellerProfile(userId: string) {
   });
 }
 
-/** Turns a stored buyer profile into the shape the scoring engine expects. */
 export function toMatchableBuyer(buyer: BuyerListItem) {
   return {
     targetJurisdictions: buyer.targetJurisdictions.map((row) => row.jurisdictionCode),

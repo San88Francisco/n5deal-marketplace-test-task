@@ -7,11 +7,6 @@ import { Target } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { ASSET_STATUS, ASSET_STATUS_LABEL } from "@/constants";
 
-/**
- * Switches the buyer directory between "everyone" and "ranked for this
- * listing". Selecting an asset also flips the sort to match, because ranking
- * you have to ask for twice is ranking nobody uses.
- */
 export function AssetPicker({
   assets,
   selectedId,
@@ -62,12 +57,12 @@ export function AssetPicker({
           startTransition(() => router.replace(`/sell/buyers?${next.toString()}`, { scroll: false }));
         }}
       />
-      {selectedId ? (
+      {selectedId && (
         <span className="text-[12.5px] text-ink-300">
           Scores compare each mandate against this listing&rsquo;s jurisdiction, licence type,
           business model and price.
         </span>
-      ) : null}
+      )}
     </div>
   );
 }

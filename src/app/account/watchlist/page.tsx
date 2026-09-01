@@ -35,8 +35,6 @@ export default async function WatchlistPage() {
 
   const buyer = profile ? toMatchableBuyer(profile) : null;
 
-  // A saved listing whose seller was suspended is kept but flagged, rather than
-  // silently vanishing from a list the buyer curated themselves.
   const items = favourites.map((favourite) => ({
     ...favourite.asset,
     unavailable:
@@ -84,7 +82,7 @@ export default async function WatchlistPage() {
             ))}
           </div>
 
-          {unavailable.length ? (
+          {unavailable.length > 0 && (
             <section className="mt-12">
               <h2 className="text-[16px] font-semibold text-ink-900">No longer available</h2>
               <p className="mt-1 text-[13.5px] text-ink-500">
@@ -96,7 +94,7 @@ export default async function WatchlistPage() {
                 ))}
               </div>
             </section>
-          ) : null}
+          )}
         </>
       )}
     </div>

@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-  // Signed-in users have a home already; the marketing page is for visitors.
+
   if (user) redirect(landingFor(user.role));
 
   const filters = assetFilterSchema.parse({ sort: "recent" });

@@ -17,11 +17,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       className={cn(controlClasses, "h-10", className)}
       {...props}
     >
-      {placeholder ? (
+      {placeholder && (
         <option value="" disabled>
           {placeholder}
         </option>
-      ) : null}
+      )}
 
       {options.map((option) => (
         <option key={option.value} value={option.value} disabled={option.disabled}>

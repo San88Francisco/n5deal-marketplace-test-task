@@ -6,14 +6,6 @@ import { parseSmartQuery } from "@/server/matching/ai";
 import { getCurrentUser } from "@/server/auth/session";
 import { safeJsonParse } from "@/utils/json";
 
-/**
- * The one place this app exposes a JSON endpoint rather than a Server Action:
- * the client needs the parsed filters back in order to rewrite the URL, and it
- * is called on demand rather than as part of a form submission.
- *
- * Signed-in users only — this endpoint costs money per call, so it is not left
- * open to anonymous traffic.
- */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
@@ -31,7 +23,6 @@ export async function POST(request: Request) {
   const result = await parseSmartQuery(parsed.data.query, taxonomy);
 
   if (!result.ok) {
-    // Not a server error — the caller falls back to keyword search.
     return NextResponse.json({ ok: false, reason: result.reason }, { status: 200 });
   }
 

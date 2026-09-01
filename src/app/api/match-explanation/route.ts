@@ -6,18 +6,13 @@ import { getCurrentUser } from "@/server/auth/session";
 import { getBuyerProfile, toMatchableBuyer } from "@/server/buyers/queries";
 import { explainMatch } from "@/server/matching/ai";
 import { scoreMatch } from "@/server/matching/score";
-import { ASSET_STATUS, LICENCE_STATUS_LABEL, USER_ROLE, USER_STATUS } from "@/constants";
+import { LICENCE_STATUS_LABEL, USER_ROLE } from "@/constants";
 import { humanise } from "@/utils/format";
 import { safeJsonParse } from "@/utils/json";
 import { isActive, isPublicAssetStatus } from "@/utils/domain";
 
 const bodySchema = z.object({ assetId: z.string().trim().min(1).max(40) });
 
-/**
- * Writes a short rationale for one listing against the signed-in buyer's
- * thesis. The score itself is computed here, deterministically — the model is
- * only handed the result to describe.
- */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user || user.role !== USER_ROLE.BUYER) {
@@ -43,7 +38,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "not_available" }, { status: 200 });
   }
 
-  // Do not explain a listing the buyer is not allowed to see.
   if (!isActive(asset.seller.status) || !isPublicAssetStatus(asset.status)) {
     return NextResponse.json({ ok: false, reason: "not_available" }, { status: 200 });
   }

@@ -2,11 +2,6 @@ import type { Decimal } from "@prisma/client/runtime/library";
 
 import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/constants";
 
-/**
- * Presentation helpers. Kept out of components so the same listing renders
- * identically in a card, a table and a message header.
- */
-
 type Money = Decimal | number | string | null | undefined;
 
 const MONEY_UNITS = [
@@ -18,7 +13,6 @@ const MONEY_UNITS = [
 const trim = (value: number): string =>
   value >= 100 ? value.toFixed(0) : value.toFixed(1).replace(/\.0$/, "");
 
-/** Compact money for cards: "€2.4M", "€620K". N5Deal quotes prices this way. */
 export function formatMoneyShort(value: Money, fallback = "Price on request"): string {
   if (value == null) return fallback;
 
@@ -29,7 +23,6 @@ export function formatMoneyShort(value: Money, fallback = "Price on request"): s
   return unit ? `€${trim(amount / unit.threshold)}${unit.suffix}` : `€${Math.round(amount)}`;
 }
 
-/** Full precision, for detail pages and forms. */
 export function formatMoneyFull(value: Money, fallback = "On request"): string {
   if (value == null) return fallback;
 
@@ -71,7 +64,6 @@ export function formatRelative(value: Date | string): string {
   return step ? `${Math.round(minutes / step.divisor)}${step.unit} ago` : formatDate(date);
 }
 
-/** SCREAMING_SNAKE enum values are unreadable in a UI. */
 export const humanise = (value: string): string =>
   value
     .toLowerCase()
@@ -81,10 +73,6 @@ export const humanise = (value: string): string =>
 
 const REGIONAL_INDICATOR_OFFSET = 0x1f1e6 - 65;
 
-/**
- * Regional indicator letters render as a flag on most platforms. Codes that are
- * not exactly two letters (BVI) get nothing rather than mojibake.
- */
 export const flagEmoji = (code: string): string =>
   code.length === 2
     ? String.fromCodePoint(

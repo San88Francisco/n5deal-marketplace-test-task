@@ -2,11 +2,6 @@ import Link from "next/link";
 
 import { cn } from "@/utils/cn";
 
-/**
- * Offset pagination rendered as links, so pages are crawlable, shareable and
- * work without JavaScript. Keyset pagination would be the right call at scale;
- * at this data volume offset is honest and simpler.
- */
 export function Pagination({
   page,
   pageCount,
@@ -42,11 +37,11 @@ export function Pagination({
 
   return (
     <nav className="mt-8 flex items-center justify-center gap-1.5" aria-label="Pagination">
-      {page > 1 ? (
+      {page > 1 && (
         <Link href={href(page - 1)} className={linkClass(false)}>
           Previous
         </Link>
-      ) : null}
+      )}
 
       {pages.map((candidate, index) => {
         const previous = pages[index - 1];
@@ -54,7 +49,7 @@ export function Pagination({
 
         return (
           <span key={candidate} className="flex items-center gap-1.5">
-            {gap ? <span className="px-1 text-ink-300">…</span> : null}
+            {gap && <span className="px-1 text-ink-300">…</span>}
             <Link
               href={href(candidate)}
               aria-current={candidate === page ? "page" : undefined}
@@ -66,11 +61,11 @@ export function Pagination({
         );
       })}
 
-      {page < pageCount ? (
+      {page < pageCount && (
         <Link href={href(page + 1)} className={linkClass(false)}>
           Next
         </Link>
-      ) : null}
+      )}
     </nav>
   );
 }

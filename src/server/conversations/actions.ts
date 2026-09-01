@@ -10,8 +10,6 @@ import { ROUTES } from "@/routes";
 import type { ActionState, ContactableRole } from "@/types";
 import { USER_ROLE } from "@/constants";
 
-
-
 export async function contactAction(
   _prev: ActionState,
   formData: FormData,

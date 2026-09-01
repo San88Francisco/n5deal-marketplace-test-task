@@ -10,14 +10,6 @@ import { ROUTES } from "@/routes";
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
-/**
- * These actions take a typed object rather than FormData: the form is driven by
- * react-hook-form, which already holds a structured value, and re-flattening it
- * into FormData only to parse it back would lose the array fields.
- *
- * The schema still runs here. Client-side validation is a convenience; this is
- * the boundary that actually enforces the rules.
- */
 export async function saveBuyerProfileAction(input: unknown): Promise<SaveResult> {
   const parsed = buyerProfileSchema.safeParse(input);
   if (!parsed.success) {
@@ -44,8 +36,6 @@ export async function saveBuyerProfileAction(input: unknown): Promise<SaveResult
       isPublished: data.isPublished,
     };
 
-    // Replacing the join rows wholesale is simpler and safer than diffing them,
-    // and the sets are tiny.
     const existing = await prisma.buyerProfile.findUnique({ where: { userId: user.id } });
 
     if (existing) {
@@ -135,8 +125,7 @@ export async function saveSellerProfileAction(input: unknown): Promise<SaveResul
         data: {
           ...profileData,
           userId: user.id,
-          // isVerified is deliberately absent: only a platform manager can set
-          // it, after KYB. A seller cannot verify themselves.
+
           operatesIn: { create: data.operatesIn.map((code) => ({ jurisdictionCode: code })) },
         },
       });

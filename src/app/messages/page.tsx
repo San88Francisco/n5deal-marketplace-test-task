@@ -60,28 +60,28 @@ export default async function MessagesPage() {
                       <span className="text-[14px] font-semibold text-ink-900">
                         {counterpartyName}
                       </span>
-                      {counterparty.status !== USER_STATUS.ACTIVE ? (
+                      {counterparty.status !== USER_STATUS.ACTIVE && (
                         <Badge tone="caution">No longer active</Badge>
-                      ) : null}
-                      {unread ? <Badge tone="navy">New</Badge> : null}
+                      )}
+                      {unread && <Badge tone="navy">New</Badge>}
                     </div>
 
                     <p className="mt-0.5 truncate text-[13.5px] text-ink-700">
                       {conversation.subject}
                     </p>
 
-                    {lastMessage ? (
+                    {lastMessage && (
                       <p className="mt-1 line-clamp-1 text-[12.5px] text-ink-500">
                         {lastMessage.senderId === user.id ? "You: " : ""}
                         {lastMessage.body}
                       </p>
-                    ) : null}
+                    )}
 
-                    {conversation.asset ? (
+                    {conversation.asset && (
                       <p className="mt-1.5 text-[12px] text-ink-300">
                         About #{conversation.asset.referenceCode} · {conversation.asset.title}
                       </p>
-                    ) : null}
+                    )}
                   </div>
 
                   <div className="shrink-0 text-right">

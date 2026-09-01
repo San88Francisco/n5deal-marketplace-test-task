@@ -6,11 +6,6 @@ import { setAssetStatusAction } from "@/server/assets/actions";
 import { Select } from "@/components/ui/select";
 import { ASSET_STATUS } from "@/constants";
 
-/**
- * The seller-controlled part of a listing's lifecycle. SUSPENDED is absent on
- * purpose — only a platform manager can set or clear it, and a seller must not
- * be able to quietly republish something that was taken down.
- */
 const OPTIONS = [
   { value: ASSET_STATUS.DRAFT, label: "Draft" },
   { value: ASSET_STATUS.PUBLISHED, label: "Published" },

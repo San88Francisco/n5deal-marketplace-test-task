@@ -10,20 +10,10 @@ import type { Paginated } from "@/types";
 
 export const PAGE_SIZE = CATALOGUE_PAGE_SIZE;
 
-/**
- * Statuses a listing can have and still be visible to buyers. SOLD stays in the
- * index deliberately — comparable pricing is one of the few public signals in
- * M&A, and hiding it makes the marketplace look thinner than it is.
- */
 const PUBLIC_STATUSES: Prisma.EnumAssetStatusFilter = {
   in: [...PUBLIC_ASSET_STATUSES],
 };
 
-/**
- * A listing is only public if its *seller* is also in good standing. Without
- * this, suspending a seller would leave their listings live — the moderation
- * flow would look like it worked while doing nothing.
- */
 const PUBLIC_ASSET_WHERE: Prisma.AssetWhereInput = {
   status: PUBLIC_STATUSES,
   seller: { status: USER_STATUS.ACTIVE },
@@ -61,8 +51,6 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
     and.push({ isValidated: true });
   }
 
-  // Every requested feature must be present, so one AND clause per feature
-  // rather than a single `in` (which would mean "any of").
   and.push(
     ...filters.features.map((feature) => ({
       features: { some: { code: feature as never } },
@@ -76,9 +64,8 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
 
     and.push(
       filters.includeOnRequest
-        ? // "Price on request" listings have no number to compare. Dropping them
-          // from a budget filter would hide exactly the deals a buyer has to ask
-          // about, so they stay in unless the buyer opts out.
+        ?
+
           { OR: [{ askingPriceEur: range }, { askingPriceEur: null }] }
         : { askingPriceEur: range },
     );
@@ -90,7 +77,7 @@ export function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
 function orderBy(sort: AssetFilters["sort"]): Prisma.AssetOrderByWithRelationInput[] {
   switch (sort) {
     case "price_asc":
-      // nulls last: "on request" should not lead a cheapest-first list.
+
       return [{ askingPriceEur: { sort: "asc", nulls: "last" } }, { publishedAt: "desc" }];
     case "price_desc":
       return [{ askingPriceEur: { sort: "desc", nulls: "last" } }, { publishedAt: "desc" }];
@@ -118,9 +105,6 @@ export async function searchAssets(
   const where = buildAssetWhere(filters);
   const wantsMatchSort = filters.sort === "match" && options.buyer;
 
-  // Match sorting happens in memory (the score is not a column), so when it is
-  // requested we pull the filtered set and page after ranking. Safe at this data
-  // volume; at scale the score would be precomputed into a column.
   const pagination: { skip?: number; take: number } = wantsMatchSort
     ? { take: MATCH_SORT_SCAN_LIMIT }
     : { skip: (filters.page - 1) * PAGE_SIZE, take: PAGE_SIZE };
@@ -165,27 +149,27 @@ export async function searchAssets(
   };
 }
 
-export async function getAssetBySlug(slug: string) {
-  return prisma.asset.findUnique({
-    where: { slug },
-    include: {
-      jurisdiction: true,
-      category: true,
-      features: true,
-      seller: {
-        select: {
-          id: true,
-          fullName: true,
-          status: true,
-          sellerProfile: { include: { operatesIn: { include: { jurisdiction: true } } } },
-        },
-      },
-      _count: { select: { favourites: true } },
+const detailInclude = {
+  jurisdiction: true,
+  category: true,
+  features: true,
+  seller: {
+    select: {
+      id: true,
+      fullName: true,
+      status: true,
+      sellerProfile: { include: { operatesIn: { include: { jurisdiction: true } } } },
     },
-  });
+  },
+  _count: { select: { favourites: true } },
+} satisfies Prisma.AssetInclude;
+
+export type AssetDetail = Prisma.AssetGetPayload<{ include: typeof detailInclude }>;
+
+export async function getAssetBySlug(slug: string): Promise<AssetDetail | null> {
+  return prisma.asset.findUnique({ where: { slug }, include: detailInclude });
 }
 
-/** Listings owned by one seller, including drafts and suspended ones. */
 const sellerListInclude = {
   jurisdiction: true,
   category: true,
@@ -211,8 +195,6 @@ export async function getTaxonomy() {
   return { jurisdictions, categories };
 }
 
-/** Jurisdictions and categories that actually have public listings — used to
- *  keep the filter sidebar honest instead of offering 38 dead options. */
 export async function getActiveFacets() {
   const [byJurisdiction, byCategory] = await Promise.all([
     prisma.asset.groupBy({

@@ -8,12 +8,6 @@ import { flagEmoji, formatMoneyShort, formatNumber, humanise } from "@/utils/for
 import type { AssetListItem } from "@/server/assets/queries";
 import { ROUTES } from "@/routes";
 
-/**
- * The listing card mirrors how N5Deal presents an asset: reference number,
- * jurisdiction, licence type and business type up top; price as the anchor;
- * the "included" chips at the bottom. A buyer scanning a grid decides on those
- * six facts, so nothing else competes with them.
- */
 export function AssetCard({ asset }: { asset: AssetListItem }) {
   const isSold = asset.status === ASSET_STATUS.SOLD;
 
@@ -35,12 +29,12 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
           </span>
         </div>
 
-        {asset.isValidated ? (
+        {asset.isValidated && (
           <Badge tone="accent" title="Due diligence confirmed by N5Deal">
             <BadgeCheck className="h-3 w-3" aria-hidden />
             Validated
           </Badge>
-        ) : null}
+        )}
       </div>
 
       <h3 className="mt-3 text-[15.5px] font-semibold leading-snug text-ink-900">
@@ -57,11 +51,11 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
         <Badge tone={asset.licenceStatus === LICENCE_STATUS.ACTIVE ? "positive" : "neutral"}>
           {LICENCE_STATUS_LABEL[asset.licenceStatus]}
         </Badge>
-        {isSold ? <Badge tone="neutral">Sold</Badge> : null}
-        {asset.status === ASSET_STATUS.UNDER_OFFER ? <Badge tone="caution">Under offer</Badge> : null}
+        {isSold && <Badge tone="neutral">Sold</Badge>}
+        {asset.status === ASSET_STATUS.UNDER_OFFER && <Badge tone="caution">Under offer</Badge>}
       </div>
 
-      {asset.match ? (
+      {asset.match && (
         <div className="mt-3">
           <MatchBadge
             score={asset.match.score}
@@ -72,7 +66,7 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
             }
           />
         </div>
-      ) : null}
+      )}
 
       <div className="mt-4 flex items-end justify-between gap-4 border-t border-ink-100 pt-4">
         <div>
@@ -82,22 +76,22 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
           </p>
         </div>
         <dl className="tabular grid grid-cols-2 gap-x-4 gap-y-0.5 text-right text-[12px] text-ink-500">
-          {asset.licenceIssuedYear ? (
+          {asset.licenceIssuedYear && (
             <>
               <dt className="text-left">Licensed</dt>
               <dd className="font-medium text-ink-700">{asset.licenceIssuedYear}</dd>
             </>
-          ) : null}
-          {asset.employees != null ? (
+          )}
+          {asset.employees != null && (
             <>
               <dt className="text-left">Staff</dt>
               <dd className="font-medium text-ink-700">{formatNumber(asset.employees)}</dd>
             </>
-          ) : null}
+          )}
         </dl>
       </div>
 
-      {asset.features.length ? (
+      {asset.features.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-1">
           {asset.features.slice(0, 4).map((feature) => (
             <li
@@ -107,13 +101,13 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
               {FEATURE_LABEL[feature.code] ?? humanise(feature.code)}
             </li>
           ))}
-          {asset.features.length > 4 ? (
+          {asset.features.length > 4 && (
             <li className="px-1 py-0.5 text-[11px] text-ink-300">
               +{asset.features.length - 4}
             </li>
-          ) : null}
+          )}
         </ul>
-      ) : null}
+      )}
 
       <div className="mt-4 flex items-center gap-4 text-[11.5px] text-ink-300">
         <span className="inline-flex items-center gap-1">
@@ -124,12 +118,12 @@ export function AssetCard({ asset }: { asset: AssetListItem }) {
           <Heart className="h-3.5 w-3.5" aria-hidden />
           {formatNumber(asset._count.favourites)}
         </span>
-        {asset.activeClients ? (
+        {asset.activeClients && (
           <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" aria-hidden />
             {formatNumber(asset.activeClients)} clients
           </span>
-        ) : null}
+        )}
       </div>
     </article>
   );

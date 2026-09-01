@@ -12,14 +12,6 @@ const EXAMPLES = [
   "UK small EMI with a clean regulatory record",
 ];
 
-/**
- * Two search modes in one control.
- *
- * Plain search is a normal keyword query — always available, no API key needed.
- * "Ask in plain English" sends the sentence to Gemini, which returns a filter
- * object; the filters are then applied to the URL like any other facet, so the
- * result stays a normal shareable search rather than an opaque AI view.
- */
 export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -51,8 +43,6 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        // Falling back to keyword search is better than showing nothing: the
-        // user asked a question and deserves results either way.
         setNotice({
           tone: "error",
           text:
@@ -142,13 +132,13 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
             <Sparkles className="h-3.5 w-3.5 text-accent-600" aria-hidden />
             Ask in plain English
           </span>
-          {!aiEnabled ? (
+          {!aiEnabled && (
             <span className="text-ink-300">(no API key configured — falls back to keywords)</span>
-          ) : null}
+          )}
         </label>
 
-        {smart
-          ? EXAMPLES.map((example) => (
+        {smart &&
+            EXAMPLES.map((example) => (
               <button
                 key={example}
                 type="button"
@@ -160,11 +150,10 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
               >
                 {example}
               </button>
-            ))
-          : null}
+            ))}
       </div>
 
-      {notice ? (
+      {notice && (
         <p
           className={`mt-3 rounded-md px-3 py-2 text-[13px] ${
             notice.tone === "info"
@@ -172,12 +161,12 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
               : "border border-ink-200 bg-ink-50 text-ink-700"
           }`}
         >
-          {notice.tone === "info" ? (
+          {notice.tone === "info" && (
             <Sparkles className="mr-1.5 inline h-3.5 w-3.5" aria-hidden />
-          ) : null}
+          )}
           {notice.text}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

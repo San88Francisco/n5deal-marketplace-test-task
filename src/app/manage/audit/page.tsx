@@ -9,10 +9,6 @@ import { ROUTES } from "@/routes";
 
 export const metadata: Metadata = { title: "Audit trail" };
 
-/**
- * Append-only by construction: there is no UI to edit or delete an entry,
- * because the value of an audit trail is precisely that nobody can tidy it up.
- */
 export default async function AuditPage() {
   await requireManager();
   const actions = await getModerationHistory();

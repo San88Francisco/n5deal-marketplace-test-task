@@ -30,8 +30,6 @@ export default async function ConversationPage({
     ("buyerProfile" in counterparty && counterparty.buyerProfile?.companyName) ||
     counterparty.fullName;
 
-  // A thread with a suspended or removed counterparty stays readable but is
-  // closed to new messages — the history is often the record of a live deal.
   const readOnly = counterparty.status !== USER_STATUS.ACTIVE;
 
   return (
@@ -45,11 +43,11 @@ export default async function ConversationPage({
           <h1 className="text-[22px] font-semibold tracking-tight text-ink-900">
             {counterpartyName}
           </h1>
-          {readOnly ? <Badge tone="caution">Participant no longer on the platform</Badge> : null}
+          {readOnly && <Badge tone="caution">Participant no longer on the platform</Badge>}
         </div>
         <p className="mt-1 text-[14px] text-ink-700">{conversation.subject}</p>
 
-        {conversation.asset ? (
+        {conversation.asset && (
           <p className="mt-2 text-[13px] text-ink-500">
             About{" "}
             <Link
@@ -60,7 +58,7 @@ export default async function ConversationPage({
             </Link>
             {conversation.asset.status === ASSET_STATUS.SUSPENDED ? " (listing suspended)" : ""}
           </p>
-        ) : null}
+        )}
       </header>
 
       <ol className="mt-8 space-y-4">

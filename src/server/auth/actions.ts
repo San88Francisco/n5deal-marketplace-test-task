@@ -11,15 +11,6 @@ import { USER_ROLE, USER_STATUS } from "@/constants";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string[]> };
 
-/**
- * Sign-in deliberately returns one generic message for "no such account" and
- * "wrong password". Telling an anonymous visitor which emails exist is an
- * account-enumeration hole.
- *
- * The one exception: a *correct* password on a suspended or removed account
- * gets an explicit message, because at that point the person has proven who
- * they are and deserves to know why they are locked out.
- */
 export async function signInAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = signInSchema.safeParse({
     email: formData.get("email"),
@@ -80,8 +71,6 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const headerList = await headers();
   await createSession(user.id, headerList.get("user-agent") ?? undefined);
 
-  // New accounts land on profile setup, not the marketplace: an empty profile
-  // is useless to the other side, and asking for it later never works.
   redirect(parsed.data.role === USER_ROLE.BUYER ? "/account/buyer-profile" : "/account/seller-profile");
 }
 

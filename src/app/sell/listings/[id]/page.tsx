@@ -26,8 +26,6 @@ export default async function EditListingPage({
     getTaxonomy(),
   ]);
 
-  // 404 rather than 403: a seller poking at another seller's listing id should
-  // not learn that it exists.
   if (!asset || asset.sellerId !== user.id) notFound();
 
   const isPublished = asset.status !== ASSET_STATUS.DRAFT;
@@ -44,12 +42,12 @@ export default async function EditListingPage({
         <span className="tabular text-[13px] text-ink-500">#{asset.referenceCode}</span>
       </div>
 
-      {asset.status === ASSET_STATUS.SUSPENDED ? (
+      {asset.status === ASSET_STATUS.SUSPENDED && (
         <p className="mt-4 rounded-md border border-critical-500/25 bg-critical-50 px-4 py-3 text-[13.5px] text-critical-700">
           This listing was suspended by a platform manager and cannot be edited back into
           visibility. Contact the platform team to resolve it.
         </p>
-      ) : null}
+      )}
 
       <div className="mt-8">
         <AssetForm
