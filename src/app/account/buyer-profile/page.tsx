@@ -4,6 +4,7 @@ import { BuyerProfileForm } from "@/components/profiles/buyer-profile-form";
 import { requireBuyer } from "@/server/auth/guards";
 import { getBuyerProfile } from "@/server/buyers/queries";
 import { getTaxonomy } from "@/server/assets/queries";
+import { toBuyerFormValues } from "@/mappers/profile-form";
 
 export const metadata: Metadata = { title: "My mandate" };
 
@@ -28,28 +29,7 @@ export default async function BuyerProfilePage() {
           jurisdictions={taxonomy.jurisdictions}
           categories={taxonomy.categories}
           isNew={!profile}
-          defaultValues={
-            profile
-              ? {
-                  companyName: profile.companyName,
-                  headline: profile.headline,
-                  about: profile.about,
-                  websiteUrl: profile.websiteUrl ?? "",
-                  country: profile.country,
-                  investorType: profile.investorType,
-                  ticketMinEur: Number(profile.ticketMinEur),
-                  ticketMaxEur: Number(profile.ticketMaxEur),
-                  timeline: profile.timeline,
-                  wantsOperatingOnly: profile.wantsOperatingOnly,
-                  proofOfFundsReady: profile.proofOfFundsReady,
-                  investmentThesis: profile.investmentThesis ?? "",
-                  isPublished: profile.isPublished,
-                  targetJurisdictions: profile.targetJurisdictions.map((row) => row.jurisdictionCode),
-                  targetCategories: profile.targetCategories.map((row) => row.categoryCode),
-                  targetBusinessTypes: profile.targetBusinessTypes.map((row) => row.businessType),
-                }
-              : {}
-          }
+          defaultValues={toBuyerFormValues(profile)}
         />
       </div>
     </div>

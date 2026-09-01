@@ -7,6 +7,7 @@ import { AssetStatusBadge } from "@/components/ui/asset-status-badge";
 import { requireSeller } from "@/server/auth/guards";
 import { getTaxonomy } from "@/server/assets/queries";
 import { prisma } from "@/server/db";
+import { toAssetFormValues } from "@/mappers/asset-form";
 import { ROUTES } from "@/routes";
 import { ASSET_STATUS } from "@/constants";
 
@@ -56,26 +57,7 @@ export default async function EditListingPage({
           isPublished={isPublished}
           jurisdictions={taxonomy.jurisdictions}
           categories={taxonomy.categories}
-          defaultValues={{
-            title: asset.title,
-            summary: asset.summary,
-            description: asset.description,
-            jurisdictionCode: asset.jurisdictionCode,
-            categoryCode: asset.categoryCode,
-            businessType: asset.businessType,
-            askingPriceEur: asset.askingPriceEur ? Number(asset.askingPriceEur) : null,
-            revenueEur: asset.revenueEur ? Number(asset.revenueEur) : null,
-            ebitdaEur: asset.ebitdaEur ? Number(asset.ebitdaEur) : null,
-            licenceStatus: asset.licenceStatus,
-            regulator: asset.regulator ?? "",
-            licenceIssuedYear: asset.licenceIssuedYear,
-            yearEstablished: asset.yearEstablished,
-            employees: asset.employees,
-            activeClients: asset.activeClients,
-            hasPassporting: asset.hasPassporting,
-            reasonForSale: asset.reasonForSale ?? "",
-            features: asset.features.map((feature) => feature.code),
-          }}
+          defaultValues={toAssetFormValues(asset)}
         />
       </div>
     </div>

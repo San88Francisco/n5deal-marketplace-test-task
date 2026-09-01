@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { SignUpForm } from "@/components/auth/auth-forms";
+import { SignUpForm } from "@/components/auth/sign-up-form";
 import { getCurrentUser } from "@/server/auth/session";
 import { landingFor } from "@/routes";
 import { USER_ROLE } from "@/constants";

@@ -5,6 +5,7 @@ import { SellerProfileForm } from "@/components/profiles/seller-profile-form";
 import { requireSeller } from "@/server/auth/guards";
 import { getSellerProfile } from "@/server/buyers/queries";
 import { getTaxonomy } from "@/server/assets/queries";
+import { toSellerFormValues } from "@/mappers/profile-form";
 
 export const metadata: Metadata = { title: "Company profile" };
 
@@ -35,19 +36,7 @@ export default async function SellerProfilePage() {
         <SellerProfileForm
           jurisdictions={taxonomy.jurisdictions}
           isNew={!profile}
-          defaultValues={
-            profile
-              ? {
-                  companyName: profile.companyName,
-                  headline: profile.headline,
-                  about: profile.about,
-                  websiteUrl: profile.websiteUrl ?? "",
-                  country: profile.country,
-                  sellerType: profile.sellerType,
-                  operatesIn: profile.operatesIn.map((row) => row.jurisdictionCode),
-                }
-              : {}
-          }
+          defaultValues={toSellerFormValues(profile)}
         />
       </div>
     </div>

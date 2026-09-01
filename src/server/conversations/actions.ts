@@ -7,15 +7,15 @@ import { replySchema, startConversationSchema } from "@/lib/validation";
 import { assertRole, AuthorizationError } from "@/server/auth/guards";
 import { replyToConversation, startConversation } from "@/server/conversations/service";
 import { ROUTES } from "@/routes";
-import type { ContactableRole } from "@/types";
+import type { ActionState, ContactableRole } from "@/types";
 import { USER_ROLE } from "@/constants";
 
-export type ContactState = { error?: string; fieldErrors?: Record<string, string[]> };
+
 
 export async function contactAction(
-  _prev: ContactState,
+  _prev: ActionState,
   formData: FormData,
-): Promise<ContactState> {
+): Promise<ActionState> {
   const parsed = startConversationSchema.safeParse({
     assetId: formData.get("assetId") || undefined,
     counterpartyId: formData.get("counterpartyId"),
@@ -50,7 +50,7 @@ export async function contactAction(
   redirect(ROUTES.messages.thread(conversationId));
 }
 
-export async function replyAction(_prev: ContactState, formData: FormData): Promise<ContactState> {
+export async function replyAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = replySchema.safeParse({
     conversationId: formData.get("conversationId"),
     body: formData.get("body"),

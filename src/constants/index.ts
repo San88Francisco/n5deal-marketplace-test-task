@@ -1,4 +1,6 @@
 export * from "./domain";
+export * from "./forms";
+export * from "./moderation";
 export * from "./labels";
 
 /** Cards per page in the two public catalogues. */
@@ -41,4 +43,9 @@ export const MATCH_SECTIONS = [
     title: "Partial matches",
     hint: "Included for completeness. Expect at least one significant mismatch.",
   },
+] as const;
+
+export const SIGN_UP_ROLE_OPTIONS = [
+  { value: "BUYER", title: "Buyer", hint: "Looking to acquire a licensed company" },
+  { value: "SELLER", title: "Seller", hint: "Listing a company or licence for sale" },
 ] as const;

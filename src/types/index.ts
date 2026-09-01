@@ -1,6 +1,7 @@
 import type {
   ASSET_FEATURES,
   MATCH_BANDS,
+  MODERATION_ACTION_TYPES,
   ASSET_STATUSES,
   BUSINESS_TYPES,
   INVESTOR_TYPES,
@@ -27,6 +28,7 @@ export type LicenceStatus = (typeof LICENCE_STATUSES)[number];
 export type AssetStatus = (typeof ASSET_STATUSES)[number];
 export type AssetFeatureCode = (typeof ASSET_FEATURES)[number];
 export type MatchBand = (typeof MATCH_BANDS)[number];
+export type ModerationActionType = (typeof MODERATION_ACTION_TYPES)[number];
 
 /** What every Server Action returns to a form. */
 export type ActionState = {
