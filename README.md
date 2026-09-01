@@ -17,7 +17,7 @@ Built as a technical assignment. All data is fictional.
 
 ## Running it locally
 
-**Prerequisites:** Node 20+, Docker (for MySQL).
+**Prerequisites:** Node 22.22.1+, Docker (for MySQL).
 
 ```bash
 # 1. install
