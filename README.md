@@ -47,11 +47,22 @@ Other useful scripts:
 | `npm run db:reset`  | Drop, re-migrate and re-seed                     |
 | `npm run db:down`   | Stop the MySQL container                         |
 
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, typecheck, tests and a
+production build on every push and pull request. `@emnapi/core` and
+`@emnapi/runtime` are pinned as direct devDependencies — they are optional,
+platform-specific transitive deps of `sharp`'s wasm32 build, and a lockfile
+generated on Windows silently drops them, which breaks `npm ci` on the Linux
+runner. Do not remove that pin without re-testing `npm ci` on Linux.
+
 ## Deployment
 
 Vercel for the app, TiDB Cloud Starter for the database — a MySQL-compatible
 serverless tier, so the deployed environment runs the same engine as local
-development rather than swapping to Postgres for hosting reasons.
+development rather than swapping to Postgres for hosting reasons. Vercel's own
+GitHub integration builds and deploys on every push to `main`; there is no
+separate deploy workflow in this repo.
 
 Environment variables on the host:
 
