@@ -7,6 +7,8 @@ audit trail.
 
 Built as a technical assignment. All data is fictional.
 
+- **Live demo:** https://n5deal-marketplace-test-task.vercel.app
+- **Source:** https://github.com/San88Francisco/n5deal-marketplace-test-task
 - **Architecture and the reasoning behind it:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - **Stack:** Next.js 15 (App Router) · TypeScript · MySQL 8.4 + Prisma · Tailwind
   · react-hook-form + Zod · Gemini
@@ -56,7 +58,6 @@ Environment variables on the host:
 | Variable | Notes |
 | --- | --- |
 | `DATABASE_URL` | Append `?sslaccept=strict&connection_limit=1` — TiDB requires TLS, and each serverless instance must hold a single connection or the pool is exhausted under load |
-| `AUTH_SECRET` | `openssl rand -base64 32` |
 | `GEMINI_API_KEY` | Optional; without it the AI features degrade to keyword search |
 
 Migrations and seed data are applied against the remote database once, from a

@@ -20,7 +20,7 @@ So the spine of the product I built is:
 > structure → a match score that ranks the other side → a contact thread that
 > preserves the context of *what* the conversation is about.
 
-Everything else (moderation, auth, i18n) supports that spine.
+Everything else — moderation, authentication, messaging — supports that spine.
 
 ### Deliberate scope decisions
 
