@@ -5,6 +5,9 @@ import { useState, useTransition } from "react";
 import { Sparkles, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SMART_SEARCH_NOTICE } from "@/constants";
+import { ROUTES } from "@/routes";
+import { paramsToObject } from "@/utils/url";
 
 const EXAMPLES = [
   "Operating EMI in the Baltics under 3 million",
@@ -27,7 +30,9 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
     if (query.trim()) next.set("q", query.trim());
     else next.delete("q");
     next.delete("page");
-    startTransition(() => router.replace(`/assets?${next.toString()}`, { scroll: false }));
+    startTransition(() =>
+      router.replace(ROUTES.assets.list(paramsToObject(next)), { scroll: false }),
+    );
   }
 
   async function applySmart(query: string) {
@@ -35,20 +40,26 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
     setNotice(null);
 
     try {
-      const response = await fetch("/api/smart-search", {
+      const response = await fetch(ROUTES.api.smartSearch, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
       });
       const data = await response.json();
 
+      if (response.status === 401) {
+        setNotice({ tone: "error", text: SMART_SEARCH_NOTICE.expired });
+        applyKeyword(query);
+        return;
+      }
+
       if (!response.ok || !data.ok) {
         setNotice({
           tone: "error",
           text:
             data.reason === "disabled"
-              ? "AI search is not configured on this deployment — searching by keyword instead."
-              : "Could not interpret that. Searching by keyword instead.",
+              ? SMART_SEARCH_NOTICE.disabled
+              : SMART_SEARCH_NOTICE.unparsable,
         });
         applyKeyword(query);
         return;
@@ -78,9 +89,11 @@ export function SmartSearch({ aiEnabled }: { aiEnabled: boolean }) {
       if (filters.keywords) next.set("q", filters.keywords);
 
       setNotice({ tone: "info", text: filters.interpretation });
-      startTransition(() => router.replace(`/assets?${next.toString()}`, { scroll: false }));
+      startTransition(() =>
+      router.replace(ROUTES.assets.list(paramsToObject(next)), { scroll: false }),
+    );
     } catch {
-      setNotice({ tone: "error", text: "AI search failed. Searching by keyword instead." });
+      setNotice({ tone: "error", text: SMART_SEARCH_NOTICE.failed });
       applyKeyword(query);
     } finally {
       setBusy(false);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
+import { ROUTES } from "@/routes";
 
 export function MatchExplainer({ assetId }: { assetId: string }) {
   const [state, setState] = useState<
@@ -11,7 +12,7 @@ export function MatchExplainer({ assetId }: { assetId: string }) {
   async function load() {
     setState({ status: "loading" });
     try {
-      const response = await fetch("/api/match-explanation", {
+      const response = await fetch(ROUTES.api.matchExplanation, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ assetId }),
