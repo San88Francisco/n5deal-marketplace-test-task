@@ -2,17 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #f7f7f2;
-  --foreground: #1d2a2a;
+@layer base {
+  :root {
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * {
+    @apply border-ink-100;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-900 antialiased;
+    font-family: var(--font-sans);
+  }
+
+  /* Numbers in tables and cards should line up column-wise. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-navy-600 ring-offset-2 ring-offset-white;
+  }
 }
 
-* {
-  border-color: #d8ddd4;
-}
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1240px] px-5 sm:px-8;
+  }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Georgia, 'Times New Roman', serif;
+  .card {
+    @apply rounded-card border border-ink-100 bg-white shadow-card;
+  }
+
+  .label {
+    @apply mb-1.5 block text-[13px] font-medium text-ink-700;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-[14px] text-ink-900
+           placeholder:text-ink-300 focus:border-navy-600 focus:outline-none focus:ring-1 focus:ring-navy-600
+           disabled:bg-ink-50 disabled:text-ink-500;
+  }
+
+  .field-error {
+    @apply mt-1 text-[12.5px] text-critical-500;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500;
+  }
 }

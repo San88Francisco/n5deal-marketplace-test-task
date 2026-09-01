@@ -1,0 +1,82 @@
+import Link from "next/link";
+
+import { cn } from "@/lib/utils";
+
+/**
+ * Offset pagination rendered as links, so pages are crawlable, shareable and
+ * work without JavaScript. Keyset pagination would be the right call at scale;
+ * at this data volume offset is honest and simpler.
+ */
+export function Pagination({
+  page,
+  pageCount,
+  basePath,
+  params,
+}: {
+  page: number;
+  pageCount: number;
+  basePath: string;
+  params: Record<string, string | undefined>;
+}) {
+  if (pageCount <= 1) return null;
+
+  const href = (target: number) => {
+    const search = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value && key !== "page") search.set(key, value);
+    }
+    if (target > 1) search.set("page", String(target));
+    const query = search.toString();
+    return query ? `${basePath}?${query}` : basePath;
+  };
+
+  const pages = Array.from({ length: pageCount }, (_, index) => index + 1).filter(
+    (candidate) =>
+      candidate === 1 ||
+      candidate === pageCount ||
+      Math.abs(candidate - page) <= 1,
+  );
+
+  return (
+    <nav className="mt-8 flex items-center justify-center gap-1.5" aria-label="Pagination">
+      {page > 1 ? (
+        <Link href={href(page - 1)} className={linkClass(false)}>
+          Previous
+        </Link>
+      ) : null}
+
+      {pages.map((candidate, index) => {
+        const previous = pages[index - 1];
+        const gap = previous != null && candidate - previous > 1;
+
+        return (
+          <span key={candidate} className="flex items-center gap-1.5">
+            {gap ? <span className="px-1 text-ink-300">…</span> : null}
+            <Link
+              href={href(candidate)}
+              aria-current={candidate === page ? "page" : undefined}
+              className={linkClass(candidate === page)}
+            >
+              {candidate}
+            </Link>
+          </span>
+        );
+      })}
+
+      {page < pageCount ? (
+        <Link href={href(page + 1)} className={linkClass(false)}>
+          Next
+        </Link>
+      ) : null}
+    </nav>
+  );
+}
+
+function linkClass(active: boolean) {
+  return cn(
+    "tabular inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-[13px] transition-colors",
+    active
+      ? "border-navy-900 bg-navy-900 text-white"
+      : "border-ink-200 bg-white text-ink-700 hover:border-navy-600 hover:text-ink-900",
+  );
+}
