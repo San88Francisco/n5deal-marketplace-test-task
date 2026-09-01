@@ -16,7 +16,7 @@ const EXAMPLES = [
  * Two search modes in one control.
  *
  * Plain search is a normal keyword query — always available, no API key needed.
- * "Ask in plain English" sends the sentence to Claude, which returns a filter
+ * "Ask in plain English" sends the sentence to Gemini, which returns a filter
  * object; the filters are then applied to the URL like any other facet, so the
  * result stays a normal shareable search rather than an opaque AI view.
  */

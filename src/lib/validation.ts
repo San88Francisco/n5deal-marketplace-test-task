@@ -74,16 +74,16 @@ export const buyerProfileSchema = z
     websiteUrl: z.string().trim().url("Enter a full URL").max(300).optional().or(z.literal("")),
     country: z.string().trim().length(2, "Two-letter country code").toUpperCase(),
     investorType: z.enum(INVESTOR_TYPES),
-    ticketMinEur: z.coerce.number().min(0, "Cannot be negative").max(10_000_000_000),
-    ticketMaxEur: z.coerce.number().min(0).max(10_000_000_000),
+    ticketMinEur: z.number({ invalid_type_error: "Enter an amount" }).min(0, "Cannot be negative").max(10_000_000_000),
+    ticketMaxEur: z.number({ invalid_type_error: "Enter an amount" }).min(0).max(10_000_000_000),
     timeline: z.enum(TIMELINES),
-    wantsOperatingOnly: z.coerce.boolean().default(false),
-    proofOfFundsReady: z.coerce.boolean().default(false),
+    wantsOperatingOnly: z.boolean(),
+    proofOfFundsReady: z.boolean(),
     investmentThesis: z.string().trim().max(4000).optional().or(z.literal("")),
-    isPublished: z.coerce.boolean().default(true),
+    isPublished: z.boolean(),
     targetJurisdictions: z.array(z.string().max(8)).min(1, "Pick at least one jurisdiction"),
     targetCategories: z.array(z.string().max(32)).min(1, "Pick at least one licence type"),
-    targetBusinessTypes: z.array(z.enum(BUSINESS_TYPES)).default([]),
+    targetBusinessTypes: z.array(z.enum(BUSINESS_TYPES)),
   })
   .refine((data) => data.ticketMaxEur >= data.ticketMinEur, {
     message: "Maximum cheque size cannot be below the minimum",
@@ -97,7 +97,7 @@ export const sellerProfileSchema = z.object({
   websiteUrl: z.string().trim().url().max(300).optional().or(z.literal("")),
   country: z.string().trim().length(2).toUpperCase(),
   sellerType: z.enum(SELLER_TYPES),
-  operatesIn: z.array(z.string().max(8)).default([]),
+  operatesIn: z.array(z.string().max(8)),
 });
 
 // ---------------------------------------------------------------------------
@@ -114,24 +114,18 @@ export const assetSchema = z
     jurisdictionCode: z.string().trim().min(2).max(8),
     categoryCode: z.string().trim().min(2).max(32),
     businessType: z.enum(BUSINESS_TYPES),
-    askingPriceEur: z.coerce.number().min(0).max(10_000_000_000).nullable().optional(),
-    revenueEur: z.coerce.number().min(0).max(10_000_000_000).nullable().optional(),
-    ebitdaEur: z.coerce.number().max(10_000_000_000).nullable().optional(),
+    askingPriceEur: z.number().min(0).max(10_000_000_000).nullable(),
+    revenueEur: z.number().min(0).max(10_000_000_000).nullable(),
+    ebitdaEur: z.number().max(10_000_000_000).nullable(),
     licenceStatus: z.enum(LICENCE_STATUSES),
     regulator: z.string().trim().max(120).optional().or(z.literal("")),
-    licenceIssuedYear: z.coerce
-      .number()
-      .int()
-      .min(1900)
-      .max(currentYear)
-      .nullable()
-      .optional(),
-    yearEstablished: z.coerce.number().int().min(1800).max(currentYear).nullable().optional(),
-    employees: z.coerce.number().int().min(0).max(1_000_000).nullable().optional(),
-    activeClients: z.coerce.number().int().min(0).max(100_000_000).nullable().optional(),
-    hasPassporting: z.coerce.boolean().default(false),
+    licenceIssuedYear: z.number().int().min(1900).max(currentYear).nullable(),
+    yearEstablished: z.number().int().min(1800).max(currentYear).nullable(),
+    employees: z.number().int().min(0).max(1_000_000).nullable(),
+    activeClients: z.number().int().min(0).max(100_000_000).nullable(),
+    hasPassporting: z.boolean(),
     reasonForSale: z.string().trim().max(2000).optional().or(z.literal("")),
-    features: z.array(z.enum(ASSET_FEATURES)).default([]),
+    features: z.array(z.enum(ASSET_FEATURES)),
   })
   .refine(
     (data) =>

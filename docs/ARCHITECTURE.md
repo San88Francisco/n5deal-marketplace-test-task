@@ -181,12 +181,13 @@ human-readable reasons behind it. It is a plain function with unit tests — no
 network, no latency, no non-determinism. This powers the ranking in both
 directions.
 
-**AI explanation and natural-language filtering (Claude).** On top of the
-deterministic score, Claude turns a free-text query ("EMI in the Baltics under
-two million, already trading") into a structured filter object, validated with
-the same Zod schema the form uses, and writes a short rationale for the top
-matches using the buyer's thesis text. If `ANTHROPIC_API_KEY` is unset or the
-call fails, the UI falls back to the deterministic path with a notice.
+**AI explanation and natural-language filtering (Gemini).** On top of the
+deterministic score, Gemini turns a free-text query ("EMI in the Baltics under
+two million, already trading") into a structured filter object — requested with
+`responseSchema` and then re-validated with Zod, so a hallucinated jurisdiction
+code is dropped before it can reach a query — and writes a short rationale for a
+listing using the buyer's thesis text. If `GEMINI_API_KEY` is unset or the call
+fails, the UI falls back to the deterministic path with a notice.
 
 The split is the point: the LLM does language, not arithmetic. Ranking that
 users act on stays explainable and testable.
